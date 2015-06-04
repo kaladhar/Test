@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+	<title>Report - Opted Out Users</title>
+<!--
+	Created by: Greg Hacic
+	Last Update: 6 June 2012 by Greg Hacic
+	Questions?: InteractiveTies.com/contact
+	Copyright (c) 2003-2012 Interactive Ties
+-->
+{!INCLUDE($SControl.msg_styles)}
+<link href="https://na1.salesforce.com/sCSS/23.0/{!$User.UIThemeDisplayed}/default/Reports.css" type="text/css" media="handheld,print,projection,screen,tty,tv" rel="stylesheet">
+<script src="/soap/ajax/24.0/connection.js" type="text/javascript"></script>
+<script language="JavaScript" type="text/javascript">
+<!--
+{!INCLUDE($SControl.msg_functions)}
+var dateFormat;
+
+function getData() {
+	getUserDateFormat();
+	if ("{!User.Manage_Home_Page_Messages__c}" == "1") {
+		var optedOutArray = new Array("{!Message__c.Opted_Out__c}","{!Message__c.Opted_Out2__c}","{!Message__c.Opted_Out3__c}","{!Message__c.Opted_Out4__c}","{!Message__c.Opted_Out5__c}","{!Message__c.Opted_Out6__c}","{!Message__c.Opted_Out7__c}","{!Message__c.Opted_Out8__c}","{!Message__c.Opted_Out9__c}","{!Message__c.Opted_Out10__c}");
+		var optedOutList = "";
+		var count = 0;
+		for (var a=0; a < optedOutArray.length; a++) {
+			if (optedOutArray[a] != "") {
+				if (count == 0) {
+					optedOutList += optedOutArray[a];
+				} else {
+					optedOutList += ";"+optedOutArray[a];
+				}
+				count++;
+			}
+		}
+		var userArray = new Array();
+		if (optedOutList != "") {
+			var userIds = new Array();
+			userIds = optedOutList.split(";");
+			userArray = getUserDetails(userIds);
+		} else {
+			userArray[0] = new Array();
+			userArray[0].push("noResults");
+		}
+		var pHTML = buildReportHTML(userArray);
+	} else {
+		var pHTML = "You do not have permission to update the Messages for this organization. Please close this window...";
+	}
+	document.getElementById("fchArea").innerHTML = pHTML;
+	document.getElementById("status").innerHTML = "Complete";
+}
+
+function buildReportHTML(array) {
+	var returnHTML = "<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">";
+	returnHTML += "<tr id=\"headerRow\" bgcolor=\"#AAAAFF\">";
+	returnHTML += "<th align=\"right\" scope=\"col\"><strong>Full Name</strong></th>";
+	returnHTML += "<th align=\"left\" scope=\"col\"><strong>Username</strong></th>";
+	returnHTML += "<th align=\"left\" scope=\"col\"><strong>Profile</strong></th>";
+	returnHTML += "<th align=\"left\" scope=\"col\"><strong>Last Login</strong></th>";
+	returnHTML += "<th align=\"left\" scope=\"col\"><strong>Active</strong></th>";
+	returnHTML += "</tr>";
+	if (array[0][0]=="noResults") {
+		returnHTML += "<tr class=\"even\" valign=\"top\"><td colspan=\"99\">This message has not yet been removed from the Home tab of any User...</td></tr>"
+	} else {
+		for (var a=0; a<array.length; a++) {
+			returnHTML += "<tr class=\"";
+			if (a%2==0) {
+				returnHTML += "even";
+			} else {
+				returnHTML += "odd";
+			}
+			returnHTML += "\" valign=\"top\">";
+			returnHTML += "<td>"+array[a][1]+"</td>";
+			returnHTML += "<td>"+array[a][2]+"</td>";
+			returnHTML += "<td>"+array[a][3]+"</td>";
+			returnHTML += "<td>"+displayDate(array[a][4])+"</td>";
+			returnHTML += "<td>";
+			if (array[a][5] == false || array[a][5] == 0 || array[a][5] == "false" || array[a][5] == "0") {
+				returnHTML += "<img src=\"/img/checkbox_unchecked.gif\" alt=\"Not Checked\" title=\"Not Checked\" width=\"21\" height=\"16\" class=\"checkImg\">";
+			} else {
+				returnHTML += "<img src=\"/img/checkbox_checked.gif\" alt=\"Checked\" title=\"Checked\" width=\"21\" height=\"16\" class=\"checkImg\">";
+			}
+			returnHTML += "</td>";
+			returnHTML += "</tr>";
+		}
+		returnHTML += "<tr bgcolor=\"#AAAACC\"><td colspan=\"99\"><strong>Grand Totals ("+array.length+" users)</strong></td></tr>";
+	}
+	returnHTML += "</table>";
+	return returnHTML;
+}
+
+function getUserDetails(array) {
+	var returnArray = new Array();
+	if (array.length > 2000) {
+		array = breakArray(array,2000);
+		for (var a=0; a<array.length; a++) {
+			var sql = sforce.connection.retrieve("Id,IsActive,LastLoginDate,Name,Username,UserRole.Name","User",array[a]);
+			for (var b=0; b<sql.length; b++) {
+				returnArray[(a*2000)+b] = new Array();
+				returnArray[(a*2000)+b].push(sql[b].Id,sql[b].Name,sql[b].Username,sql[b].UserRole.Name,sql[b].LastLoginDate,sql[b].IsActive);
+			}
+		}
+	} else {
+		var sql = sforce.connection.retrieve("Id,IsActive,LastLoginDate,Name,Username,UserRole.Name","User",array);
+		for (var a=0; a<sql.length; a++) {
+			returnArray[a] = new Array();
+			returnArray[a].push(sql[a].Id,sql[a].Name,sql[a].Username,sql[a].UserRole.Name,sql[a].LastLoginDate,sql[a].IsActive);
+		}
+	}
+	return returnArray;
+}
+
+function breakArray(array,size) {
+	var returnArray = new Array();
+	var count = 0;
+	if (array.length > size) {
+		for (var a=0; a<array.length; a++) {
+			if (a%size==0 || a==0) {
+				returnArray[count] = new Array();
+				count++;
+			}
+			returnArray[count-1].push(array[a]);
+		}
+	} else {
+		returnArray[count] = new Array();
+		for (var a=0; a<array.length; a++) {
+			returnArray[count].push(array[a]);
+		}
+	}
+	return returnArray;
+}
+//-->
+</script>
+</head>
+<body class="reportTab reportRunPage" onLoad="getData()">
+<div class="bPageTitle">
+	<div class="ptBody secondaryPalette"><div class="content"><img src="/s.gif" alt="Home" class="pageTitleIcon"><h1 class="pageType noSecondHeader">Users Opted Out</h1><div class="blank">&nbsp;</div><div class="blank">&nbsp;</div></div><div class="links"><!--<a href="javascript:openPopupFocusEscapePounds('..{!LEFT($SControl.msg_help,48)}', 'Help', 700, 600, 'width=700,height=600,resizable=yes,toolbar=yes,status=no,scrollbars=yes,menubar=yes,directories=no,location=no,dependant=no', false, false);" title="Help for Links Tab (New Window)"><span class="helpLink">Help</span><img src="/s.gif" alt="Help" class="helpIcon" title="Help"></a>--></div></div>
+</div>
+<div class="progressIndicator"><h2>Report Generation Status:</h2><div id="status">Processing</div></div>
+<div class="bGeneratedReport">
+	<div class="bPageBlock">
+		<div class="pbHeader"></div>
+		<div class="pbBody">
+			<div class="pbSubblock">
+				<div class="pbSubheader"><h3>Generated Report:</h3></div>
+				<div class="pbSubbody">
+					<div class="reportHeader"><table border="0" cellspacing="0" cellpadding="0"><tr><td colspan="2">Filtered By:&nbsp;&nbsp;</td></tr><tr><td>&nbsp;&nbsp;&nbsp;</td><td nowrap><span class="filterField">Message Title</span>&nbsp;<span class="filterOp">equals</span>&nbsp;<span class="filterValue" id="filterValue">{!SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(Message__c.Name,'&','&amp;'),'\'','&rsquo;'),'"','&quot;'),'<SCRIPT','&lt;script'),'</SCRIPT>','&lt;/script&gt;')}</span>&nbsp;</td></tr></table></div>
+					<div class="reportOutput"><div id="fchArea"><img src="/servlet/servlet.ImageServer?id=01570000000wRM7&oid=00D700000009wcP" alt="Loading..." border="0"></div></div>
+				</div>
+			</div>
+		</div>
+		<div class="pbFooter secondaryPalette"><div class="bg"></div></div>
+	</div>
+</div>
+<div class="confidential">Confidential Information - Do Not Distribute</div>
+</body>
+</html>

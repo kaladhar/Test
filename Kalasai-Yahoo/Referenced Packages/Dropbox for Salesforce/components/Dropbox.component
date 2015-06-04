@@ -1,0 +1,508 @@
+<apex:component controller="Dropbox_for_SF.DropboxController" access="global">
+
+    <html ng-app="DfSApp">
+
+        <head>
+            <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet" type="text/css"/>
+            <apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__mobileassets, 'mobileassets/css/normalize.css')}"/>
+            <apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__style, 'css/fi-sprite.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__style, 'css/fi-core.css')}" />
+
+            <apex:includeScript value="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" />
+            <apex:includeScript value="//ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular.min.js"/>
+            <apex:includeScript value="//ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular-sanitize.min.js"/>
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/jquery.ba-postmessage.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ng-context-menu.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ng-clip.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/he.js')}" />
+
+
+            <apex:variable value="" var="" rendered="{!splitScripts}">
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/max/fi.js')}" />
+            </apex:variable>
+
+            <apex:variable value="" var="" rendered="{!NOT(splitScripts)}">
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/fi.js')}" />
+            </apex:variable>
+
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/filesize.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ZeroClipboard.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/download.min.js')}" />
+
+
+            <script>
+                var RemoteActions = {};
+                RemoteActions.listDirectoryDetails = '{!$RemoteAction.DropboxController.listDirectoryDetails}';
+                RemoteActions.search = '{!$RemoteAction.DropboxController.search}';
+                RemoteActions.download = '{!$RemoteAction.DropboxController.download}';
+                RemoteActions.rename = '{!$RemoteAction.DropboxController.rename}';
+                RemoteActions.deletePath = '{!$RemoteAction.DropboxController.deletePath}';
+                RemoteActions.restore = '{!$RemoteAction.DropboxController.restore}';
+                RemoteActions.shares = '{!$RemoteAction.DropboxController.shares}';
+                RemoteActions.shareToChatter = '{!$RemoteAction.DropboxController.shareToChatter}';
+                RemoteActions.shareByEmail = '{!$RemoteAction.DropboxController.shareByEmail}';
+                RemoteActions.searchPeople = '{!$RemoteAction.DropboxController.searchPeople}';
+                RemoteActions.uploadChunk = '{!$RemoteAction.DropboxController.uploadChunk}';
+                RemoteActions.commitUpload = '{!$RemoteAction.DropboxController.commitUpload}';
+                RemoteActions.createFolder = '{!$RemoteAction.DropboxController.createFolder}';
+                RemoteActions.delta = '{!$RemoteAction.DropboxController.delta}';
+                RemoteActions.latestCursor = '{!$RemoteAction.DropboxController.latestCursor}';
+                RemoteActions.getPreviewAttachmentId = '{!$RemoteAction.DropboxController.getPreviewAttachmentId}';
+                RemoteActions.initApp = '{!$RemoteAction.DropboxController.initApp}';
+                RemoteActions.incrementChatterShareCount = '{!$RemoteAction.DropboxController.incrementChatterShareCount}';
+                
+                var VFBindings = {};
+                VFBindings.objectId = '{!JSENCODE(ContextObjectId)}';
+                VFBindings.chatterContextId = '{!JSENCODE(ChatterContextId)}';
+                VFBindings.isPublisherAction = {!PublisherAction};
+                VFBindings.zeroclipboard = '{!URLFOR($Resource.webassets, "swf/ZeroClipboard.swf")}';
+                VFBindings.isConnected = {!IsConnected};
+                VFBindings.isOwnerConnected = {!IsOwnerConnected};
+                VFBindings.isOwner = {!isOwner};
+                VFBindings.connectPage = '{!$Page.Connect}';
+                VFBindings.previewPage = '{!$Page.Preview}';
+                VFBindings.previewSpreadsheetPage = '{!$Page.PreviewSpreadsheet}';
+
+                var VFLabels = {};
+                VFLabels.One_Email_Recipient = '{!HTMLENCODE($Label.One_Email_Recipient)}';
+                VFLabels.Unable_to_upload = '{!HTMLENCODE($Label.Unable_to_upload)}';
+                VFLabels.Invalid_Email_Recipient = '{!HTMLENCODE($Label.Invalid_Email_Recipient)}';
+                VFLabels.Loading = '{!HTMLENCODE($Label.Loading)}';
+                VFLabels.Searching = '{!HTMLENCODE($Label.Searching)}';
+                VFLabels.Renaming = '{!HTMLENCODE($Label.Renaming)}';
+                VFLabels.Creating_Folder = '{!HTMLENCODE($Label.Creating_Folder)}';
+                VFLabels.Deleting = '{!HTMLENCODE($Label.Deleting)}';
+                VFLabels.Restoring = '{!HTMLENCODE($Label.Restoring)}';
+                VFLabels.Copied_to_Clipboard = '{!HTMLENCODE($Label.Copied_to_Clipboard)}';
+                VFLabels.Posting_to_Chatter = '{!HTMLENCODE($Label.Posting_to_Chatter)}';
+                VFLabels.Sending_Email = '{!HTMLENCODE($Label.Sending_Email)}';
+
+            </script>
+
+        </head>
+
+        <body ng-controller="MainCtrl" class="fi-body" ng-keyup="handleTopLevel($event)">
+
+            <fi-popup ng-if="popups.upload" fi-display="{{popups.upload}}">
+                <div class="fi-modal-overlay"></div>
+                <div class="fi-modal-box">
+                    <h2>
+                        {!$Label.Upload_Title}<a href="" ng-click="onCloseUploadPopup()">&times;</a>
+                    </h2>
+                    <div class="fi-modal-content">
+
+                        <ul class="fi-upload-modal">
+                            <li ng-repeat="file in upload.files" ng-class="{'first':$first, 'last': $last, 'complete': file.completed == file.file.size, 'cancelled': file.cancel}">     
+                            
+                                <div class="fi-upload-modal-progress-bar" style="width: {{(file.completed / file.file.size) * 100}}%;"></div>      
+                                <div class="fi-upload-modal-file-info">       
+                                    <div class="fi-upload-modal-file-info-name">         
+                                        <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web s_web_page_white" />
+                                        <span class="filename">{{file.file.name}} </span>
+                                        <span class="size">- {{file.file.size | fiBytes}}</span>       
+                                    </div>        
+                                    <div class="fi-upload-modal-dest">         
+                                        <a class="dest">{{file.path}}</a>       
+                                    </div>       
+                                    <div class="fi-upload-modal-status">
+                                        <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web" ng-class="{'s_web_s_check': file.completed == file.file.size && !file.cancel, 's_web_cancelsync': file.cancel, 'fi-hidden': file.completed != file.file.size && !file.cancel}" />
+                                        <a ng-if="!file.cancel" href="#" ng-click="onUploadCancel(file)" ng-class="{'fi-hidden': file.completed == file.file.size}">&times;</a>
+                                    </div>        
+                                    
+                                </div>
+                            </li>
+                        </ul>
+                        
+                        <div ng-if="upload.files.length === 0">
+                            <p>{!$Label.Upload_prompt}</p>
+                        </div> 
+
+                        <div class="fi-modal-footer">
+                            <button id="fi-add-more" class="fi-btn fi-btn-grad" fi-proxy-click="#fi-add-more-input">
+                                <span ng-if="upload.files.length === 0">{!$Label.Upload_Choose}</span>
+                                <span ng-if="upload.files.length != 0">{!$Label.Upload_Add}</span>
+                            </button>
+                            <input type="file" value="{!$Label.Upload_Add_More_Files}" class="fi-btn fi-add-more" id="fi-add-more-input" fi-file-change="onFilesAdd" multiple="multiple" />
+                            <input ng-if="upload.remainingFiles != 0" type="button" value="{!$Label.Upload_Hide}" class="fi-btn" ng-click="onCloseUploadPopup()" />                
+                            <input ng-if="upload.remainingFiles == 0" type="button" value="{!$Label.Upload_Done}" class="fi-btn fi-btn-blue" ng-click="onCloseUploadPopup()" />                
+                        </div>
+
+                    </div>
+                </div>
+            </fi-popup>
+            
+            <fi-popup ng-if="popups.deleteItem" fi-display="{{popups.deleteItem}}">
+                <div class="fi-modal-overlay"></div>
+                <div class="fi-modal-box">
+                    <h2>
+                        {!$Label.Delete_Prompt}<a href="" ng-click="onDeleteCancel()">&times;</a>
+                    </h2>
+                    <div class="fi-modal-content">
+                        <p><apex:outputText value="{!$Label.dropbox_for_sf__Delete_Confirm}" escape="false"/></p>                
+                        <div class="fi-modal-footer">
+                            <input type="button" value="{!$Label.Delete_Delete}" class="fi-btn fi-btn-blue" ng-click="onDeleteDelete(deleteItem)" />
+                            <input type="button" value="{!$Label.Delete_Cancel}" class="fi-btn" ng-click="onDeleteCancel()" />                
+                        </div>
+                    </div>
+                </div>
+            </fi-popup>
+
+            <fi-popup ng-if="popups.restore" fi-display="{{popups.restore}}">
+                <div class="fi-modal-overlay"></div>
+                <div class="fi-modal-box">
+                    <h2>
+                        {!$Label.Restore_Prompt}<a href="" ng-click="onRestoreCancel()">&times;</a>
+                    </h2>
+                    <div class="fi-modal-content">
+                        <p><apex:outputText value="{!$Label.dropbox_for_sf__Restore_Confirm}" escape="false" /></p>                
+                        <div class="fi-modal-footer">
+                            <input type="button" value="{!$Label.Restore_Restore}" class="fi-btn fi-btn-blue" ng-click="onRestoreRestore(restoreItem)" />
+                            <input type="button" value="{!$Label.Restore_Cancel}" class="fi-btn" ng-click="onRestoreCancel()" />                
+                        </div>
+                    </div>
+                </div>
+            </fi-popup>
+    
+            <fi-popup ng-if="popups.sharelink" fi-display="{{popups.sharelink}}">
+                <div class="fi-modal-overlay"></div>
+                <div class="fi-modal-box fi-modal-share">
+                    <h2>
+                        <div ng-if="sharelink.method == 'Email'" class="fi-share-title">
+                            {!$Label.Share_Prompt}                                               
+                        </div>  
+                        <div ng-if="sharelink.method == 'Chatter'" class="fi-share-title">
+                            {!$Label.Post_to_Chatter_Prompt}
+                        </div> 
+                        <a class="fi-share-close" href="" ng-click="onShareLinkCancel()">&times;</a>
+                        <a ng-if="pageDetails.hasChatter" class="fi-share-chatter" ng-class="{'fi-share-active': sharelink.method == 'Chatter'}" href="#" ng-click="sharelink.method = 'Chatter'">
+                            <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="fi-share-chatter-icon" />        
+                        </a>                              
+                        <a ng-if="pageDetails.hasChatter" class="fi-share-email" ng-class="{'fi-share-active': sharelink.method == 'Email'}" href="#" ng-click="sharelink.method = 'Email'">
+                            <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web s_web_email_20 " />    
+                        </a>
+                    </h2>
+                    
+                    <div class="fi-modal-content">
+                        
+                        <div class="fi-share-img">
+                            <img ng-src="https://www.dropbox.com/static/images/icons128/{{sharelink.item.icon}}.png" class=""/>
+                        </div>
+                        <div class="fi-share-inputs">
+                            <div ng-if="sharelink.method == 'Email'" >
+                                <div class="fi-share-input-container">
+                                    <div class="fi-share-selected" ng-class="{'fi-share-selected-ok' : email.isValid, 'fi-share-selected-error' : !email.isValid}" ng-repeat="email in sharelink.emailrecipients">
+                                        <a href=""><img class="fi-share-selected-email" src="{!URLFOR($Resource.style, "img/email_16.png")}" /><span>{{email.email}}</span></a><a href="" class="fi-share-selected-remove" ng-click="removeShareEmail(email.email)">&times;</a>
+                                    </div>
+                                    <input autocomplete="off" type="text" size="1" placeholder="{!$Label.Share_by_Email_Recipients}" class="fiSearchPeople fi-share-input" ng-model="sharelink.instantquery"/>
+                                </div>
+                                <div ng-if="sharelink.instantsearch.length > 0 && sharelink.method == 'Email'">
+                                    <ul class="fi-share-search">
+                                        <li ng-repeat="person in sharelink.instantsearch | orderBy:name" ng-click="onPersonSearchClick(person.email)" ng-mouseover="setSelectedSearchItem($index)" ng-mouseleave="setSelectedSearchItem(-1)" ng-class="{'fi-search-highlight': $index == sharelink.searchitemsSelected}">
+                                            <img ng-src="{{person.imageUrl}}" />
+                                            <div>
+                                                <span><b>{{person.name}}</b></span>
+                                                <span>{{person.email}}</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <textarea ng-if="sharelink.method == 'Chatter'" placeholder="{!$Label.Share_Message}" tabindex="23" name="custom_message" class="fi-share-message" ng-model="chatter.newMessage" ng-change="onChatterMessageKeyUp($event)" ng-keydown="chatterSuggestionsKeyDown($event)"></textarea>
+                            <textarea ng-if="sharelink.method == 'Email'" placeholder="{!$Label.Share_Message}" tabindex="23" name="custom_message" class="fi-share-message" ng-model="sharelink.message"></textarea>
+                            <div ng-if="chatter.mentionSuggestions.length > 0 && sharelink.method == 'Chatter'">
+                                <ul class="fi-share-search">
+                                    <li ng-repeat="person in chatter.mentionSuggestions" ng-click="onMentionSuggestionClick(person.recordId, person.name)" ng-mouseover="setSelectedChatterSuggestion($index)" ng-mouseleave="setSelectedChatterSuggestion(-1)" ng-class="{'fi-search-highlight': $index == chatter.mentionSuggestionsSelected}">
+                                        <img ng-src="{{person.photoUrl}}" />
+                                        <div>
+                                            <span><b>{{person.name}}</b></span>
+                                            <span>{{person.description}}</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                        </div>
+                        
+
+                        <div class="fi-modal-footer">
+                            <input ng-if="sharelink.method == 'Chatter'" type="button" value="{!$Label.Share_Post}" class="fi-btn fi-btn-blue" ng-click="onShareToChatter()" />
+                            <input ng-if="sharelink.method == 'Email'" type="button" value="{!$Label.Share_Send}" class="fi-btn fi-btn-blue" ng-click="onShareByEmail()" />
+                            <input type="button" value="{!$Label.Share_Get_Link}" class="fi-btn" clip-copy="sharelink.link" clip-click="onGetLinkClick()" />                
+                        </div>
+                    </div>
+                </div>
+            </fi-popup>
+
+            <fi-popup ng-if="popups.fileDetails" fi-display="{{popups.fileDetails}}">
+                <div class="fi-modal-overlay"></div>
+                <div class="fi-modal-box fi-modal-preview fi-modal-preview-none">
+                    
+                    <div class="fi-share-title">
+                        <h2>{{preview.item.name}}</h2>
+                        <a class="fi-share-close" href="" ng-click="popups.fileDetails = false" title="Close">&times;</a>
+                    </div>  
+                    
+                    <div class="fi-modal-content">
+                        <div class="fi-share-img">
+                            <img ng-src="https://www.dropbox.com/static/images/icons128/{{preview.item.icon}}.png" />
+                        </div>
+                        <p>{{preview.item.modifiedFormatted}} - {{preview.item.bytes | fiBytes}}</p>
+                    </div>
+                </div>
+            </fi-popup>
+
+            <div class="fi-message active" ng-if="messageBox.show">
+                <span ng-class="{'ok': messageBox.type == 'info', 'error': messageBox.type == 'error'}">{{messageBox.message}}</span>
+            </div>
+
+            <div class="fi-container" fi-drag-and-drop="isDrag">
+                <div style="display:none">
+                    <apex:pageBlock id="findme"/>
+                </div>
+                <div class="fi-header secondaryPalette fi-drop">
+                    <div class="fi-head-main">
+                        <a ng-click="onLogoClick();" href="#" class="fi-home">
+                            <img src="{!URLFOR($Resource.style, 'img/dropbox-logo.png')}" alt="" />
+                            <h3 >Dropbox</h3>
+                        </a>
+                       
+                        <div class="fi-actions">
+                            <ul>   
+                                <li ng-if="pageDetails.hasEdit && !DirectoryDetails.isSearch">
+                                    <input type="button" title="{!$Label.Add_Files_Button}" value=" {!$Label.Add_Files_Button} " class="btn" ng-click="onUpload()" ng-Disabled="pageDetails.noRoot || !isOwnerConnected"/>
+                                </li>
+                                <li ng-if="pageDetails.hasEdit && !DirectoryDetails.isSearch">
+                                    <input type="button" title="{!$Label.New_Folder_Button}" value=" {!$Label.New_Folder_Button} " class="btn" ng-click="onNewFolder()" ng-Disabled="pageDetails.noRoot || !isOwnerConnected"/>
+                                </li>
+                                <li ng-if="!DirectoryDetails.isSearch">
+                                    <input type="button" title="{!$Label.Show_Deleted_Button}" value=" {!$Label.Hide_Show_Deleted_Button} " class="btn" ng-click="toggleDeleted()" ng-Disabled="pageDetails.noRoot || !isOwnerConnected"/>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="fi-search">
+                            <form ng-submit="runSearch()">
+                                <a class="search" href="#" ng-click="runSearch()"><img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_mag_glass" /></a>
+                                <input ng-model="query" placeholder="{!$Label.Search_Placeholder}"  class="fi-search-input" />
+                            </form>
+                        </div>
+                   </div>
+                   <div class="fi-head-inner" ng-class="{'fi-search-result':DirectoryDetails.isSearch}">
+                        <div class="fi-breadcrumbs">
+                            <a ng-if="navigation.pathParts.length > 1" class="fi-breadcrumbs-dropdown-box" ng-click="navigation.showMenu = !navigation.showMenu">
+                                <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_folder_arrow_32" />
+                            </a>
+                            <img ng-if="navigation.pathParts.length > 1" class="sprite_web s_web_chevron breadcrumb_spacer" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" />   
+                            <span ng-bind-html="DirectoryDetails.isSearch ? '{!$Label.Search_Results_Title}' : (navigation.pathParts.length === 1) ? '&nbsp;' :  navigation.pathParts[0].name"></span>
+
+                            <div ng-if="navigation.pathParts.length > 1 && navigation.showMenu" class="fi-breadcrumbs-dropdown">
+                                <ul>                           
+                                    <li ng-repeat="dir in navigation.pathParts" ng-show="!$first">             
+                                        <a href="" ng-click="handlePathClick(dir.path); navigation.showMenu = !navigation.showMenu; ">
+                                            <span><img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_folder_32" /><span ng-bind-html="dir.name"></span></span>
+                                        </a>         
+                                    </li>                           
+                                </ul>     
+                                <div class="chat-bubble-arrow-border"></div>     
+                                <div class="chat-bubble-arrow"></div> 
+                            </div>
+                        </div>     
+                        <div class="fi-browse fi-item">
+                        <div class="fi-file fi-context fi-heading">
+                            <div ng-if="!DirectoryDetails.isSearch" class="fi-filename">
+                                <a href="#" ng-class="{'bold': predicate == 'name'}" style="cursor: pointer;" ng-click="sortDirectoryContents('oldName')">{!$Label.Header_Name}</a>
+                                <img ng-if="predicate == 'oldName' && !reverse" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" style="line-height: 100%; cursor: pointer;" class="sprite_web s_web_arrow-up-gray" alt="" />                            
+                                <img ng-if="predicate == 'oldName' && reverse" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" style="line-height: 100%; cursor: pointer;" class="sprite_web s_web_arrow-down-gray" alt="" />             
+                            </div>
+                            <div ng-if="!DirectoryDetails.isSearch" class="fi-modified">
+                                <a href="#" ng-class="{'bold': predicate == 'modified'}" ng-click="sortDirectoryContents('modified')">{!$Label.Header_Modified}</a>
+                                <img ng-if="predicate == 'modified' && !reverse" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" style="line-height: 100%; cursor: pointer;" class="sprite_web s_web_arrow-up-gray" alt="" />                            
+                                <img ng-if="predicate == 'modified' && reverse" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" style="line-height: 100%; cursor: pointer;" class="sprite_web s_web_arrow-down-gray" alt="" />                            
+                            </div>
+                            <div ng-if="!DirectoryDetails.isSearch" class="fi-size">
+                                <a href="#" ng-class="{'bold': predicate == 'bytes'}" ng-click="sortDirectoryContents('bytes')">{!$Label.Header_Size}</a>
+                                <img ng-if="predicate == 'bytes' && !reverse" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" style="line-height: 100%; cursor: pointer;" class="sprite_web s_web_arrow-up-gray" alt="" />                            
+                                <img ng-if="predicate == 'bytes' && reverse" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" style="line-height: 100%; cursor: pointer;" class="sprite_web s_web_arrow-down-gray" alt="" />                            
+                            </div>
+                        </div>
+                    </div>
+                   </div>                   
+                </div>
+                <div class="fi-content">
+                    <ul class="fi-list fi-drop" ng-if="DirectoryDetails.items.length">
+                        <li class="fi-item fi-single" ng-click="onLeftClick(item)" ng-class="{'fi-search-result': DirectoryDetails.isSearch, 'fi-selected': item.selected, 'fi-deleted': item.isDeleted, 'fi-folder-drop': dragDetails.generalDrag && item.isDir && !item.isDeleted && editPermission}" context-menu="onRightClick(item);" data-target="fi-context-menu" context-menu-disabled="item.isDeleted && item.isDir" ng-repeat="item in DirectoryDetails.items | orderBy:predicate:reverse ">
+                            <div class="fi-file fi-drop fi-folder-drag-over" fi-over-folder="dragDetails.overFolder">
+                                <div class="fi-filename">
+                                    <img class="fi-icon sprite_web s_web_{{item.icon}}_32" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" />
+                                    <div class="fi-filename-data">
+                                        <a ng-if="item != editItem && !item.isDeleted" href="#" ng-click="handleItemClick(item)" ng-bind-html="item.name"></a>
+                                        <span ng-if="item.isDeleted" ng-bind-html="item.name"></span>
+                                        <form ng-submit="onCommitRename(item)" ng-if="item == editItem">
+                                            <input ng-model="editNewName.value" fi-focus="{{item == editItem}}" ng-keyup="onEditKeyUp($event, item)"/>
+                                        </form>
+                                        <p ng-if="DirectoryDetails.isSearch">
+                                            {!$Label.Search_Result_Location} <a href="#" ng-click="handleSearchItemClick(item.path);$event.stopPropagation();">/<span ng-bind-html="item.path"></span></a>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="fi-modified">
+                                    <div ng-if="!item.isDeleted"><span ng-if="DirectoryDetails.isSearch">{!$Label.Header_Modified}</span>{{item.modifiedFormatted}}</div>
+                                    <a ng-if="DirectoryDetails.isSearch" href="#" class="fi-li-share" ng-click="onShareLinkClick(item);$event.stopPropagation();">
+                                        <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web s_web_s_link "/>           
+                                    </a>
+                                </div>
+                                <div ng-if="!DirectoryDetails.isSearch" class="fi-size"> 
+                                    <div ng-if="!item.isDeleted && !item.isDir">{{item.bytes | fiBytes}}</div> 
+                                    <div ng-if="item.isDeleted || item.isDir">--</div>  
+                            
+                                    <a ng-if="!item.isDeleted" href="#" class="fi-li-share" ng-click="onShareLinkClick(item);$event.stopPropagation();">
+                                        <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web s_web_s_link "/>           
+                                    </a>
+                                </div>
+                                <br class="fi-clear" />
+                            </div>
+                        </li>
+                    </ul>
+
+
+                    <div ng-if="isConnected && isOwnerConnected && !pageDetails.noRoot && pageDetails.root === ''" id="browse-empty" class="fi-browse-empty">
+                    </div>                    
+                    <div ng-if="!isConnected" id="browse-empty" class="fi-browse-empty fi-drop" ng-click="openConnect()">
+                        <div class="fi-browse-empty-content">
+                            <h3>{!$Label.Disconnected_User}</h3>
+                        </div>
+                    </div>
+                    <div ng-if="isConnected && !isOwnerConnected" id="browse-empty" class="fi-browse-empty" >
+                        <div class="fi-browse-empty-content">
+                            <h3>{!$Label.Disconnected_Owner}</h3>
+                        </div>
+                    </div>
+                    <div ng-if="isConnected && isOwnerConnected && pageDetails.noRoot" id="browse-empty" class="fi-browse-empty fi-drop" >
+                        <div class="fi-browse-empty-content">
+                            <h3>{!$Label.No_Shared_Root}</h3>
+                            <p>{!$Label.No_Shared_Root_Text}</p>
+                        </div>
+                    </div>
+                    <div ng-if="DirectoryDetails.items.length == 0 && !DirectoryDetails.isSearch && isConnected" id="browse-empty" class="fi-browse-empty fi-drop">
+                        <div class="fi-browse-empty-content">
+                            <h3 ng-if="navigation.pathParts.length > 1">{!$Label.Empty_Folder_Header}</h3>
+                            <h3 ng-if="navigation.pathParts.length == 1">{!$Label.Empty_Folder_Header_Root}&nbsp;{!HTMLEncode(ObjectLabel)}</h3>
+                            <p>{!$Label.Empty_Folder_Text}</p>                        
+                        </div>
+                    </div>
+                    <div ng-if="DirectoryDetails.items.length == 0 && DirectoryDetails.isSearch" id="browse-empty" class="fi-browse-empty fi-drop">
+                        <div class="fi-browse-empty-content">
+                            <h3>{!$Label.No_Results_Header}</h3>
+                            <p><a href="#" ng-click="onLogoClick()">{!$Label.No_Results_Text}</a></p>  
+                        </div>
+                    </div>
+                </div>
+                <div class="fi-content-bottom"></div>
+            </div>
+            
+            <div id="fi-context-menu" style="display:none;">
+
+                <ul id="context-menu" class="chat-bubble menu" >
+
+                    <li class="action primary" ng-if="!selectedItem.isDeleted">
+                        <label for="token_share_button">
+                            <button id="token_share_button" type="submit" name="action" ng-click="onShareChatterLinkClick(selectedItem)">
+                                <div class="icon-frame">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="fi-share-chatter-icon" /> 
+                                </div>
+                                <span>{!$Label.Context_Menu_Share_Chatter}</span>
+                            </button>
+                        </label>
+                    </li>
+
+                    <li class="action primary" ng-if="!selectedItem.isDeleted">
+                        <label for="token_share_button">
+                            <button id="token_share_button" type="submit" name="action" ng-click="onShareLinkClick(selectedItem)">
+                                <div class="icon-frame">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_s_link" />
+                                </div>
+                                <span>{!$Label.Context_Menu_Share}</span>
+                            </button>
+                        </label>
+                    </li>
+
+                    <li class="action primary" ng-if="!selectedItem.isDir && !selectedItem.isDeleted">
+                        <label for="download_button">
+                            <button id="download_button" type="submit" name="action" ng-click="onDownload(selectedItem)">
+                                <div class="icon-frame">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_download" />
+                                </div>
+                                <span>{!$Label.Context_Menu_Download}</span>
+                            </button>
+                        </label>
+                    </li>
+
+                    <li class="action primary" ng-if="!selectedItem.isDeleted && pageDetails.hasEdit">
+                        <label for="delete_button">
+                            <button id="delete_button" type="submit" name="action" ng-click="onDelete(selectedItem)">
+                                <div class="icon-frame">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_delete_16" />
+                                </div>
+                                <span>{!$Label.Context_Menu_Delete}</span>
+                            </button>
+                        </label>
+                    </li>
+
+                    <li class="action primary" ng-if="selectedItem.isDeleted && !selectedItem.isDir && pageDetails.hasEdit">
+                        <label for="restore_button">
+                            <button id="restore_button" type="submit" name="action" ng-click="onRestore(selectedItem)">
+                                <div class="icon-frame">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_restore" />
+                                </div>
+                                <span>{!$Label.Context_Menu_Restore}</span>
+                            </button>
+                        </label>
+                    </li>
+
+                    <li class="action primary" ng-if="!selectedItem.isDeleted && pageDetails.hasEdit">
+                        <label for="rename_button">
+                            <button id="rename_button" type="submit" name="action" ng-click="onStartRename(selectedItem)">
+                                <div class="icon-frame">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite_web s_web_rename" />
+                                </div>
+                                <span>{!$Label.Context_Menu_Rename}</span>
+                            </button>
+                        </label>
+                    </li>
+
+                </ul>
+
+            </div>
+            <div ng-if="upload.remainingFiles >= 0 && upload.totalFiles > 0 && !popups.upload" class="fi-upload-file-status" ng-class="{'complete': upload.remainingFiles == 0}">
+                <div class="fi-upload-info">
+                    <div class="fi-upload-info-icon">
+                        <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web" ng-class="{'s_web_s_check': upload.remainingFiles <= 0, 's_web_s_sync': upload.remainingFiles > 0}"/>
+                    </div>
+                    <div class="fi-upload-files-info">
+                        <span ng-if="upload.remainingFiles > 0" class="fi-upload-files-info-file-desc">{!$Label.Upload_Progress_Uploading} {{upload.currentName}} - <a ng-click="popups.upload = true" href="#" class="fi-remain-link">{{upload.remainingFiles}} {{upload.remainingFiles == 1 ? '{!$Label.Upload_Progress_File}' : '{!$Label.Upload_Progress_Files}'}} {!$Label.Upload_Progress_Remaining}</a></span>
+                        <span ng-if="upload.remainingFiles == 0" class="fi-upload-files-info-file-desc">{!$Label.Upload_Progress_Uploaded} {{(upload.totalFiles == 1 ? upload.currentName : upload.files.length + ' {!$Label.Upload_Progress_Files}')}}</span>
+                    </div>
+                    <div class="fi-upload-status"><a class="small-x-button" ng-if="upload.remainingFiles == 0" href="" ng-click="upload.remainingFiles = -1;">&times;</a></div>
+                </div>
+                <div class="fi-upload-bar">
+                    <div style="width: {{(upload.currentDone / upload.currentSize) * 100}}%;" class="fi-upload-progress"></div>
+                </div>
+            </div>     
+            <div ng-if="isConnected" class="fi-external-drop-indicator fi-drop fi-drop-all" fi-drag-and-drop="isDrag"></div>
+            <div ng-if="isConnected" class="fi-external-drop-indicator top" ng-class="{'active': dragDetails.generalDrag && !DirectoryDetails.isSearch, 'stop': !pageDetails.hasEdit && !DirectoryDetails.isSearch}"></div>
+            <div ng-if="isConnected" class="fi-external-drop-indicator right" ng-class="{'active': dragDetails.generalDrag && !DirectoryDetails.isSearch, 'stop': !pageDetails.hasEdit && !DirectoryDetails.isSearch}"></div>
+            <div ng-if="isConnected" class="fi-external-drop-indicator bottom" ng-class="{'active': dragDetails.generalDrag && !DirectoryDetails.isSearch, 'stop': !pageDetails.hasEdit && !DirectoryDetails.isSearch}"></div>
+            <div ng-if="isConnected" class="fi-external-drop-indicator left" ng-class="{'active': dragDetails.generalDrag && !DirectoryDetails.isSearch, 'stop': !pageDetails.hasEdit && !DirectoryDetails.isSearch}"></div>
+
+            <script type="text/javascript">
+
+                document.domain = 'force.com';
+                
+                var c = $("[id$='findme']").parent().attr('class');
+                $('.fi-container').addClass(c.replace('Block', 'Tab'));
+
+            </script>
+
+        </body>
+    </html>
+
+</apex:component>

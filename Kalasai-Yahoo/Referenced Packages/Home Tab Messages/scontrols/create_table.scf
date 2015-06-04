@@ -1,0 +1,363 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<title>Create or Modify Table</title>
+<style type="text/css">
+body, td {font-family: arial, verdana, helvetica; font-size: 11px;}
+select, input, button {font-size: 10px;}
+.table-settings {background-color: #F7F7F7; border: 2px solid #FFFFFF; padding: 5px;}
+.wysiwyg-color-picker-table {border: 1px solid #7E7E81; background-color: #F7F7F7; padding: 1px;}
+.wysiwyg-color-picker-div {font-size: 1px; height:12px; width:12px;}
+.selectColorBorder {border: 1px solid #F7F7F7;}
+.selectColorOn {border: 1px solid #999999; background-color: #CCCCCC;}
+.selectColorOff {border: 1px solid #F7F7F7; background-color: #F7F7F7;}
+</style>
+
+</head>
+<script language="JavaScript" type="text/javascript">
+<!--
+var WYSIWYG_Popup = {
+	getParam: function(param) {
+		var query = window.location.search.substring(1);
+		var parms = query.split('&');
+		for (var i=0; i<parms.length; i++) {
+			var pos = parms[i].indexOf('=');
+			if (pos > 0) {
+				var key = parms[i].substring(0,pos).toLowerCase();
+				var val = parms[i].substring(pos+1);
+				if (key == param.toLowerCase()) 
+				return val;
+			}
+		}
+	return null;
+	}
+}
+
+if(!window.opener) window.close();
+
+var WYSIWYG = window.opener.WYSIWYG;	
+var WYSIWYG_Core = window.opener.WYSIWYG_Core;
+var WYSIWYG_Table = window.opener.WYSIWYG_Table;
+//-->
+</script>
+<script language="JavaScript" type="text/javascript">
+<!--
+function WYSIWYG_Color() {
+	
+	// colors
+	var COLORS = new Array(
+		"#000000","#993300","#333300","#003300","#003366","#000080",
+		"#333399","#333333","#800000","#FF6600","#808000","#008000",
+		"#008080","#0000FF","#666699","#808080","#FF0000","#FF9900",
+		"#99CC00","#339966","#33CCCC","#3366FF","#800080","#999999",
+		"#FF00FF","#FFCC00","#FFFF00","#00FF00","#00CCFF","#993366",
+		"#C0C0C0","#FF99CC","#FFCC99","#FFFF99","#CCFFCC","#CCFFFF",
+		"#99CCFF","#666699","#777777","#999999","#EEEEEE","#FFFFFF"	
+	);
+	
+	// div id of the color table
+	var CHOOSER_DIV_ID = "colorpicker-div";
+
+	/**
+	 * Init the color picker
+	 */
+	this.init = function() {
+		var div = document.createElement("DIV");
+		div.id = CHOOSER_DIV_ID;
+		div.style.position = "absolute";
+		div.style.visibility = "hidden";		
+		document.body.appendChild(div);
+	};
+	
+	
+	/**
+	 * Open the color chooser to choose a color.
+	 * 
+	 * @param {String} element Element identifier 
+	 */
+	this.choose = function(element) {
+		var div = document.getElementById(CHOOSER_DIV_ID);
+		if(div == null) {
+			alert("Initialisation of color picker failed.");
+			return;
+		}
+				
+		// writes the content of the color picker
+		write(element);
+								
+		// Display color picker
+		var x = window.event.clientX + document.body.scrollLeft;
+		var y = window.event.clientY + document.body.scrollTop;
+		var winsize = windowSize();
+		if(x + div.offsetWidth > winsize.width) x = winsize.width - div.offsetWidth - 5;
+		if(y + div.offsetHeight > winsize.height) y = winsize.height - div.offsetHeight - 5;
+		div.style.left = x + "px";
+		div.style.top = y + "px";
+		div.style.visibility = "visible";				
+	};
+	
+	/**
+	 * Set the color in the given field
+	 *
+	 * @param {String} n Element identifier
+	 * @param {String} color HexColor String
+	 */
+	this.select = function(n, color) {
+		var div = document.getElementById(CHOOSER_DIV_ID);
+		var elm = document.getElementById(n);
+		elm.value = color;
+		elm.style.color = color;
+		elm.style.backgroundColor = color;
+		div.style.visibility = "hidden";
+	}
+	
+	
+	/**
+	 * Write the color table
+	 * @param {String} n Element identifier
+	 * @private
+	 */
+	function write(n) {
+		
+		var div = document.getElementById(CHOOSER_DIV_ID);
+		
+		var output = "";
+		output += '<table border="1" cellpadding="0" cellspacing="0" class="wysiwyg-color-picker-table"><tr>';
+		for(var i = 0; i < COLORS.length;i++) {
+			var color = COLORS[i];
+			output += '<td class="selectColorBorder" ';
+			output += 'onmouseover="this.className=\'selectColorOn\';" ';
+			output += 'onmouseout="this.className=\'selectColorOff\';" ';
+			output += 'onclick="WYSIWYG_ColorInst.select(\'' + n + '\', \'' + color + '\');"> ';
+			output += '<div style="background-color:' + color + ';" class="wysiwyg-color-picker-div">&nbsp;</div> ';
+			output += '</td>';
+			
+			if(((i+1) % Math.round(Math.sqrt(COLORS.length))) == 0) {
+				output += "</tr><tr>";
+			}
+		}
+		
+		output += '</tr></table>';	
+		
+		// write to div element
+		div.innerHTML = output;
+	};
+	
+	/**
+	 * Set the window.event on Mozilla Browser
+	 * @private
+	 */
+	function _event_tracker(event) { 
+		if (!document.all && document.getElementById) {
+			window.event = event;
+		}
+	}	
+	document.onmousedown = _event_tracker;
+	
+	/**
+	 * Get the window size
+	 * @private
+	 */
+	function windowSize() {
+		if (window.innerWidth) {
+	  		return {width: window.innerWidth, height: window.innerHeight};
+	  	} 
+		else if (document.body && document.body.offsetWidth) {
+	  		return {width: document.body.offsetWidth, height: document.body.offsetHeight};
+	  	} 
+		else {
+	  		return {width: 0, height: 0};
+	  	}
+	}
+}
+
+var WYSIWYG_ColorInst = new WYSIWYG_Color();
+//-->
+</script>
+<script type="text/javascript">
+var n = WYSIWYG_Popup.getParam('wysiwyg');
+	
+// add stylesheet file
+if(n) document.write('<link rel="stylesheet" type="text/css" href="../' + WYSIWYG.config[n].CSSFile +'">\n');
+
+function buildTable() {
+  		
+	var WYSIWYG_Table = window.opener.WYSIWYG_Table;
+	var doc = WYSIWYG.getEditorWindow(n).document;
+	// create a table object
+	var table = doc.createElement("TABLE");
+	// set cols and rows
+	WYSIWYG_Core.setAttribute(table, "tmpcols", document.getElementById("cols").value);
+	WYSIWYG_Core.setAttribute(table, "tmprows", document.getElementById("rows").value);
+	// alignment
+	if(document.getElementById("alignment").value != "") 
+		WYSIWYG_Core.setAttribute(table, "align", document.getElementById("alignment").value);
+	
+	// style attributes
+	var style = "";
+	// padding
+	style += "padding:" + document.getElementById("padding").value + "px;";
+	// width
+	style += "width:" + document.getElementById("width").value + document.getElementById("widthType").value + ";";
+	// border
+	style += "border:" + document.getElementById("border").value + "px;";
+	// borderstyle
+	if(document.getElementById("borderstyle").value != "none")
+		style += "border-style:" + document.getElementById("borderstyle").value + ";";
+	// border-color
+	if(document.getElementById("bordercolor").value != "none")
+		style += "border-color:" + document.getElementById("bordercolor").value + ";";
+	// border-collapse
+	var collapse = document.getElementById("bordercollapse").checked ? "true" : "separate";
+	style += "border-collapse:" + collapse + ";";
+	// background-color
+	if(document.getElementById("backgroundcolor").value != "none")
+		style += "background-color:" + document.getElementById("backgroundcolor").value + ";";
+	
+	WYSIWYG_Core.setAttribute(table, "style", style);
+	
+	
+	WYSIWYG_Table.create(n, table);
+	window.close();
+	return;
+	
+	// Checks if the table border will use the BORDER-COLLAPSE CSS attribute
+	var collapse;
+	if (document.getElementById('borderCollapse').checked == true) {
+		collapse = document.getElementById('borderCollapse').value;
+	}
+	else {
+		collapse = "separate";
+	}
+	
+	// Builds a table based on the data input into the form
+	var table = '<table border="0" cellpadding="0" cellspacing="0" style="';
+	table += 'BORDER-COLLAPSE: ' + collapse + ';';  
+	table += ' border: ' + document.getElementById('borderWidth').value + ' ' +  document.getElementById('borderStyle').value + ' ' +  document.getElementById('borderColor').value + ';';	
+	table += ' width: ' + document.getElementById('tableWidth').value + document.getElementById('widthType').value + ';';
+	table += ' background-color: ' + document.getElementById('shadingColor').value + ';"';
+	table += ' alignment="' + document.getElementById('alignment').value + '">\n';	
+	
+	// Creates the number of rows and cols the table will have
+	for (var i = 0; i < document.getElementById('rows').value; i++) {
+		table += '<tr>\n';
+		for (var j = 0; j < document.getElementById('cols').value; j++) {
+			table += '<td style="border: ' + document.getElementById('borderWidth').value + ' ' +  document.getElementById('borderStyle').value + ' ' +  document.getElementById('borderColor').value + '; padding: ' + document.getElementById('padding').value + ';">&nbsp;</td>\n';
+		}
+		table += '</tr>\n';
+	}
+	table += '</table>\n';
+	
+	
+	// Inserts the table code into the WYSIWYG editor	
+	WYSIWYG.insertHTML(table, n);
+	window.close();
+}	
+</script>
+	<body bgcolor="#EEEEEE" marginwidth="0" marginheight="0" topmargin="0" leftmargin="0" onload="WYSIWYG_ColorInst.init();">
+	<table border="0" cellpadding="0" cellspacing="0" style="width:100%;padding: 10px;">
+		<tr>
+			<td>
+				<span style=" font-weight: bold;">Table Properties:</span>
+					<table style="width:100%;" border="0" cellpadding="1" cellspacing="0"
+					class="table-settings">
+					<tr>
+						<td style="width: 20%;">Rows:</td>
+						<td style="width: 25%;"><input type="text" size="4" id="rows" name="rows" value="2" style="width: 50px;"></td>
+						<td style="width: 25%;">Width:</td>
+						<td style="width: 30%;"><input type="text" name="width" id="width" value="100" size="10" style="width: 50px;">
+							<select name="widthType" id="widthType" style="margin-right: 10px; font-size: 10px;">
+								<option value="%">%</option>
+								<option value="px">px</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Cols:</td>
+						<td><input type="text" size="4" id="cols" name="cols" value="2"	style="width: 50px;"></td>
+						<td>Alignment:</td>
+						<td>
+							<select name="alignment" id="alignment" style="margin-right: 10px; width: 95px;">
+								<option value="">Not Set</option>
+								<option value="left">Left</option>
+								<option value="right">Right</option>
+								<option value="center">Center</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Padding:</td>
+						<td><input type="text" id="padding" name="padding" value="2" style="width: 50px;"></td>
+						<td>Background-Color:</td>
+						<td>
+							<table border="0" cellpadding="0" cellspacing="0">
+								<tr>
+									<td width="25">
+										<table border="0" cellpadding="0" cellspacing="0">
+											<tr>
+												<td><input type="text" name="backgroundcolor" id="backgroundcolor" value="none" style="width:50px;"></td>
+											</tr>
+										</table>
+									</td>
+									<td>
+										<button style="margin-left: 2px;" onClick="WYSIWYG_ColorInst.choose('backgroundcolor');">
+											Choose
+										</button>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td>Border-Size:</td>
+						<td><input type="text" size="4" id="border" name="border" value="0" style="width: 50px;"></td>
+						<td>Border-Color:</td>
+						<td>
+							<table border="0" cellpadding="0" cellspacing="0">
+								<tr>
+									<td width="25">
+										<table border="0" cellpadding="0" cellspacing="0">
+											<tr>
+												<td><input type="text" name="bordercolor" id="bordercolor" value="none" style="width:50px;"></td>
+											</tr>
+										</table>
+									</td>
+									<td><button style="margin-left: 2px;" onClick="WYSIWYG_ColorInst.choose('bordercolor');">Choose</button></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td>Border-Style:</td>
+						<td>
+						<select id="borderstyle" name="borderstyle" style="width: 80px;">
+							<option value="none">none</option>
+							<option value="solid">solid</option>
+							<option value="double">double</option>
+							<option value="dotted">dotted</option>
+							<option value="dashed">dashed</option>
+							<option value="groove">groove</option>
+							<option value="ridge">ridge</option>
+							<option value="inset">inset</option>
+							<option value="outset">outset</option>
+						</select>
+					</td>
+					<td>Border-Collapse:</td>
+					<td><input type="checkbox" name="bordercollapse" id="bordercollapse"></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	</table>
+		<div align="right">
+			<input type="submit" value="  Submit  " onClick="buildTable();" style="font-size: 12px;">
+			&nbsp;
+			<input type="submit" value="  Cancel  " onClick="window.close();" style="font-size: 12px; margin-right: 15px;">
+		</div>
+			</td>
+		</tr>
+	</table>
+
+</body>
+</html>

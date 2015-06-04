@@ -1,0 +1,519 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+	<title>Home Tab Messages</title>
+<!--
+	Created by: Greg Hacic
+	Last Update: 14 February 2012 by Greg Hacic
+	Questions?: InteractiveTies.com/contact
+	Copyright (c) 2003-2012 Interactive Ties
+
+Theme: {!$User.UIThemeDisplayed}
+-->
+{!INCLUDE($SControl.msg_styles)}
+<style type="text/css">
+p {margin-top: 0px;}
+.txtLoading {background-color: #E7FAE0; color:#D9D9D9; font-size:14px; padding: 2px 3px 2px 3px;}
+.removeMessage, a.removeMessage:visited, a.removeMessage:link, a.removeMessage:active {color: #BDBDBD; font-size: 90%; text-decoration: none;}
+a.removeMessage:hover {color: #BDBDBD; font-size: 90%; text-decoration: underline;}
+</style>
+<script src="/soap/ajax/23.0/connection.js" type="text/javascript"></script>
+<script src="/js/functions.js" type="text/javascript"></script>
+<script language="JavaScript" type="text/javascript">
+<!--
+{!INCLUDE($SControl.msg_functions)}
+
+var dateFormat;
+//var optOutLimit = 4;
+
+function initiatePage() {
+//	divDisplay("Hide");
+	getUserDateFormat();
+	setTimeout("loadPage('Active')",1);
+}
+
+function loadPage(reqType) {
+	var buttonString = "<div class=\"pbHeader\"><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td class=\"pbTitle\"><img src=\"/s.gif\" alt=\"\" width=\"1\" height=\"1\" class=\"minWidth\" title=\"\"><h2 class=\"mainTitle\">&nbsp;</h2></td><td class=\"pbButton\">";
+	if ("{!User.Manage_Home_Page_Messages__c}" == "1") {
+		buttonString += "<input value=\" Maintenance \" class=\"btn\" type=\"button\" title=\"Maintenance\" onclick=\"JavaScript: openMessageMaintenance();\" name=\"maintenance\">";
+	} else {
+		buttonString += "&nbsp;";
+	}
+	buttonString += "</td><td class=\"pbHelp\"><select id=\"msglist_mode\" name=\"mglist_mode\" onchange=\"applyFilter();\"><option value=\"Active\"";
+	if (reqType == "Active") {
+		buttonString += " selected";
+	}
+	buttonString += ">Active</option><option value=\"Deleted\"";
+	if (reqType == "Deleted") {
+		buttonString += " selected";
+	}
+	buttonString += ">Deleted</option></select></td></tr></table></div>";
+	document.getElementById("buttons").innerHTML = buttonString;
+	var msgArray = new Array();
+	msgArray = getMessages(reqType);
+	var docHTML = formatMessages(msgArray,reqType);
+	document.getElementById("content").innerHTML = docHTML;
+	//divDisplay("Show");
+	resizeFrame1();
+}
+
+function getMessages(reqType) {
+	var returnArray = new Array();
+	var soql = "SELECT ities_msg__Always_Visible__c, ities_msg__Contents__c, ities_msg__Date__c, Id, Name FROM ities_msg__Message__c WHERE ities_msg__Active__c=true AND ities_msg__Date__c <= TODAY AND (ities_msg__Expiration_Date__c > TODAY OR ities_msg__Expiration_Date__c = null)";
+	if (reqType == "Deleted") {
+		soql += " AND (ities_msg__Opted_Out__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out2__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out3__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out4__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out5__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out6__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out7__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out8__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out9__c INCLUDES ('{!User.Id}')";
+		soql += " OR ities_msg__Opted_Out10__c INCLUDES ('{!User.Id}')";
+		soql += ")";
+	} else {
+		soql += " AND ((ities_msg__Opted_Out__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out2__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out3__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out4__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out5__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out6__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out7__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out8__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out9__c EXCLUDES ('{!User.Id}')";
+		soql += " AND ities_msg__Opted_Out10__c EXCLUDES ('{!User.Id}')";
+		soql += ") OR ities_msg__Always_Visible__c = true)";
+	}
+	if ("{!User.Manage_Home_Page_Messages__c}" == "0") {
+		soql += " AND ities_msg__Visibility__c INCLUDES ('{!User.ProfileId}')";
+	}
+	soql += " ORDER BY ities_msg__Date__c DESC"
+	var sql = sforce.connection.query(soql);
+	if (sql.getBoolean("done") && sql.size > 0) {
+		var records = sql.getArray("records");
+		for (var a in records) {
+			returnArray[a] = new Array();
+			returnArray[a].push(records[a].Id, records[a].ities_msg__Date__c, records[a].Name, records[a].ities_msg__Contents__c, records[a].ities_msg__Always_Visible__c);
+		}
+	} else {
+		returnArray[0] = new Array();
+		returnArray[0].push("noResults","noResults");
+	}
+	return returnArray;
+}
+
+function formatMessages(array,reqType) {
+	var returnHTML = "<table class=\"list\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\">";
+	if (array[0][0] == "noResults") {
+		returnHTML += "<tr class=\"dataRow even last\" onmouseout=\"if (typeof(hiOff) != 'undefined'){hiOff(this);}\" onfocus=\"if (typeof(hiOn) != 'undefined'){hiOn(this);}\" onblur=\"if (typeof(hiOff) != 'undefined'){hiOff(this);}\" onmouseover=\"if (typeof(hiOn) != 'undefined'){hiOn(this);}\"><td class=\"dataCell\">";
+		if (reqType == "Deleted") {
+			returnHTML += "No deleted messages.";
+		} else {
+			returnHTML += "There are no active messages at this time.";
+		}
+		returnHTML += "</td></tr>";
+	} else {
+		returnHTML += "<tr class=\"headerRow\">";
+		returnHTML += "<th scope=\"col\" class=\"\">Date</th>";
+		returnHTML += "<th scope=\"col\" class=\"\">&nbsp;</th>";
+		returnHTML += "<th scope=\"col\" class=\"\">Title</th>";
+		returnHTML += "<th scope=\"col\" class=\"\">&nbsp;</th>";
+		returnHTML += "</tr>";
+		for (var a=0; a<array.length; a++) {
+			returnHTML += "<tr class=\"dataRow ";
+			if (a%2==0) {
+				returnHTML += "even";
+			} else {
+				returnHTML += "odd";
+			}
+			if ((a+1) == array.length) {
+				returnHTML += " last\"";
+			} else if (a == 0) {
+				returnHTML += " first\"";
+			} else {
+				returnHTML += "\"";
+			}
+			returnHTML += " id=\"parent"+a+"\"";
+			returnHTML += " onblur=\"if (window.hiOff){hiOff(this);}\" onfocus=\"if (window.hiOn){hiOn(this);}\" onmouseout=\"if (window.hiOff){hiOff(this);}\" onmouseover=\"if (window.hiOn){hiOn(this);}\">";
+			returnHTML += "<td class=\"dataCell\" align=\"right\" nowrap>"+displayDate(array[a][1])+"</td>";
+			returnHTML += "<td class=\"dataCell\">&nbsp;</td>";
+			returnHTML += "<td class=\"dataCell\" width=\"100%\"><div><a href=\"JavaScript: showRow('"+a+"');\">"+escapeHTML2(array[a][2])+"</a></div><div style=\"display: none; padding-top: 8px;\" id=\"child"+a+"\">"+escapeHTML2(array[a][3])+"</div></td>";
+			returnHTML += "<td class=\"actionColumn\"><span class=\"removeMessage\">";
+//			if ("{!User.Manage_Home_Page_Messages__c}" == "1") {
+//				returnHTML += "Hide";
+//			} else {
+//				returnHTML += "<a href=\"JavaScript: removeMsg('"+array[a][0]+"')\" title=\"Close and remove from message list\" class=\"removeMessage\">Hide</a>";
+//			}
+			if (reqType == "Deleted") {
+				returnHTML += "[ <a href=\"JavaScript: addMsg('"+array[a][0]+"')\" title=\"Add back to message list\" class=\"removeMessage\">Undelete</a> ]";
+			} else {
+				if (array[a][4] == "false") {
+					returnHTML += "[ <a href=\"JavaScript: removeMsg('"+array[a][0]+"')\" title=\"Close and remove from message list\" class=\"removeMessage\">Delete</a> ]";
+				} else {
+					returnHTML += "&nbsp;";
+				}
+			}
+			returnHTML += "</span></td>";
+			returnHTML += "</tr>";
+		}
+	}
+	returnHTML += "</table>";
+	return returnHTML;
+}
+
+function openMessageMaintenance() {
+	parent.location.href = "{!LEFT(URLFOR( $Action.Message__c.msg_listing,null),53)}";
+}
+
+function resizeFrame1() {
+	var sframe = parent.document.getElementById("msgTarget");
+	if (document.body.scrollHeight*1<80) {
+		sframe.style.height = "80px";
+	} else {
+		if (navigator.userAgent.indexOf("Firefox") != -1) {
+			var nHeight = document.body.scrollHeight+10;
+		} else {
+			var nHeight = document.body.scrollHeight+15;
+		}
+		sframe.style.height = nHeight+"px";
+	}
+}
+
+function showRow(id) {
+	var child = document.getElementById("child"+id);
+	if (child.style.display != "none") {
+		child.style.display = "none";
+	} else {
+		if (navigator.userAgent.indexOf("Firefox") != -1) {
+			child.style.display = "table-row";
+		} else {
+			child.style.display = "block";
+		}
+	}
+	resizeFrame1();
+}
+
+function addMsg(msgId) {
+//	alert("Sorry but this functionality is disabled in Demo.\n\nTry the demo on InteractiveTies.com...");
+	var msgOptedOutAlready = getOptedList(msgId);
+	var msgOptedOutAlready = new Array();
+	msgOptedOutAlready = getOptedList(msgId);
+//	alert(msgOptedOutAlready);
+	for (var a=0; a < msgOptedOutAlready.length; a++) {
+		if (msgOptedOutAlready[a] != null) {
+			 var newString = findOptedOutRecord(msgOptedOutAlready[a]);
+			 msgOptedOutAlready[a] = newString;
+		}
+	}
+//	alert(msgOptedOutAlready);
+	var _Message = new sforce.SObject("ities_msg__Message__c");
+	_Message.Id = msgId;
+	if (msgOptedOutAlready[0] == null) {
+		_Message.ities_msg__Opted_Out__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out__c = msgOptedOutAlready[0];
+	}
+	if (msgOptedOutAlready[1] == null) {
+		_Message.ities_msg__Opted_Out2__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out2__c = msgOptedOutAlready[1];
+	}
+	if (msgOptedOutAlready[2] == null) {
+		_Message.ities_msg__Opted_Out3__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out3__c = msgOptedOutAlready[2];
+	}
+	if (msgOptedOutAlready[3] == null) {
+		_Message.ities_msg__Opted_Out4__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out4__c = msgOptedOutAlready[3];
+	}
+	if (msgOptedOutAlready[4] == null) {
+		_Message.ities_msg__Opted_Out5__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out5__c = msgOptedOutAlready[4];
+	}
+	if (msgOptedOutAlready[5] == null) {
+		_Message.ities_msg__Opted_Out6__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out6__c = msgOptedOutAlready[5];
+	}
+	if (msgOptedOutAlready[6] == null) {
+		_Message.ities_msg__Opted_Out7__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out7__c = msgOptedOutAlready[6];
+	}
+	if (msgOptedOutAlready[7] == null) {
+		_Message.ities_msg__Opted_Out8__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out8__c = msgOptedOutAlready[7];
+	}
+	if (msgOptedOutAlready[8] == null) {
+		_Message.ities_msg__Opted_Out9__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out9__c = msgOptedOutAlready[8];
+	}
+	if (msgOptedOutAlready[9] == null) {
+		_Message.ities_msg__Opted_Out10__c = null;
+	} else {
+		_Message.ities_msg__Opted_Out10__c = msgOptedOutAlready[9];
+	}
+//	alert(_Message);
+	var updateMsg = sforce.connection.update([_Message]);
+//	alert(updateMsg);
+	if (updateMsg[0].getBoolean("success")) {
+		initiatePage();
+	} else {
+		alert("Error:\n"+updateMsg[0]);
+	}
+}
+
+function removeMsg(msgId) {
+//	alert("Sorry but this functionality is disabled in Demo.\n\nTry the demo on InteractiveTies.com...");
+	if (confirm("Are you sure you want to remove this message?")) {
+		var msgOptedOutAlready = new Array();
+		msgOptedOutAlready = getOptedList(msgId);
+		//alert(msgOptedOutAlready);
+		var optRecordCounts = new Array();
+		var someOpts = false;
+		for (var a=0; a < msgOptedOutAlready.length; a++) {
+			if (msgOptedOutAlready[a] != null) {
+				var arraySize = howBig(msgOptedOutAlready[a]);
+				if (arraySize > 0) {
+					someOpts = true;
+					optRecordCounts.push(arraySize);
+				} else {
+					optRecordCounts.push(0);
+				}
+			} else {
+				optRecordCounts.push(0);
+			}
+		}
+		//alert("optRecordCounts: "+optRecordCounts+"\n\ntypeof(optRecordCounts[0]): "+typeof(optRecordCounts[0]));
+		var foundSpot = false;
+		var _Message = new sforce.SObject("ities_msg__Message__c");
+		_Message.Id = msgId;
+		if (!someOpts) {
+			_Message.ities_msg__Opted_Out__c = "{!User.Id}";
+			_Message.ities_msg__Opted_Out2__c = null;
+			_Message.ities_msg__Opted_Out3__c = null;
+			_Message.ities_msg__Opted_Out4__c = null;
+			_Message.ities_msg__Opted_Out5__c = null;
+			_Message.ities_msg__Opted_Out6__c = null;
+			_Message.ities_msg__Opted_Out7__c = null;
+			_Message.ities_msg__Opted_Out8__c = null;
+			_Message.ities_msg__Opted_Out9__c = null;
+			_Message.ities_msg__Opted_Out10__c = null;
+			foundSpot = true;
+		} else {
+			if (optRecordCounts[0] > 0 && optRecordCounts[0] < 100 && !foundSpot) {
+				msgOptedOutAlready[0] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[1] == 0 && !foundSpot) {
+				msgOptedOutAlready[1] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[1] > 0 && optRecordCounts[1] < 100 && !foundSpot) {
+				msgOptedOutAlready[1] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[2] == 0 && !foundSpot) {
+				msgOptedOutAlready[2] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[2] > 0 && optRecordCounts[2] < 100 && !foundSpot) {
+				msgOptedOutAlready[2] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[3] == 0 && !foundSpot) {
+				msgOptedOutAlready[3] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[3] > 0 && optRecordCounts[3] < 100 && !foundSpot) {
+				msgOptedOutAlready[3] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[4] == 0 && !foundSpot) {
+				msgOptedOutAlready[4] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[4] > 0 && optRecordCounts[4] < 100 && !foundSpot) {
+				msgOptedOutAlready[4] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[5] == 0 && !foundSpot) {
+				msgOptedOutAlready[5] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[5] > 0 && optRecordCounts[5] < 100 && !foundSpot) {
+				msgOptedOutAlready[5] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[6] == 0 && !foundSpot) {
+				msgOptedOutAlready[6] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[6] > 0 && optRecordCounts[6] < 100 && !foundSpot) {
+				msgOptedOutAlready[6] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[7] == 0 && !foundSpot) {
+				msgOptedOutAlready[7] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[7] > 0 && optRecordCounts[7] < 100 && !foundSpot) {
+				msgOptedOutAlready[7] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[8] == 0 && !foundSpot) {
+				msgOptedOutAlready[8] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[8] > 0 && optRecordCounts[8] < 100 && !foundSpot) {
+				msgOptedOutAlready[8] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			if (optRecordCounts[9] == 0 && !foundSpot) {
+				msgOptedOutAlready[9] = "{!User.Id}";
+				foundSpot = true;
+			} else if (optRecordCounts[9] > 0 && optRecordCounts[9] < 100 && !foundSpot) {
+				msgOptedOutAlready[9] += ";{!User.Id}";
+				foundSpot = true;
+			}
+			_Message.ities_msg__Opted_Out__c = msgOptedOutAlready[0];
+			_Message.ities_msg__Opted_Out2__c = msgOptedOutAlready[1];
+			_Message.ities_msg__Opted_Out3__c = msgOptedOutAlready[2];
+			_Message.ities_msg__Opted_Out4__c = msgOptedOutAlready[3];
+			_Message.ities_msg__Opted_Out5__c = msgOptedOutAlready[4];
+			_Message.ities_msg__Opted_Out6__c = msgOptedOutAlready[5];
+			_Message.ities_msg__Opted_Out7__c = msgOptedOutAlready[6];
+			_Message.ities_msg__Opted_Out8__c = msgOptedOutAlready[7];
+			_Message.ities_msg__Opted_Out9__c = msgOptedOutAlready[8];
+			_Message.ities_msg__Opted_Out10__c = msgOptedOutAlready[9];
+		}
+		if (foundSpot) {
+			var updateMsg = sforce.connection.update([_Message]);
+			if (updateMsg[0].getBoolean("success")) {
+				initiatePage();
+			} else {
+				alert("Error:\n"+updateMsg[0]);
+			}
+		} else {
+			alert("Error: Unable to remove message!\n10001:TOO_MANY_VALUES");
+		}
+	}
+}
+
+function findOptedOutRecord(passedString) {
+	var tempArray = new Array();
+	tempArray = passedString.split(";");
+	var updatedString = "";
+	var count = 0;
+	for (var a=0; a<tempArray.length; a++) {
+		if (tempArray[a] != "{!User.Id}") {
+			if (count == 0) {
+				updatedString = tempArray[a];
+			} else {
+				updatedString += ";"+tempArray[a];
+			}
+			count++;
+		}
+	}
+	if (count == 0) {
+		updatedString = null;
+	}
+	return updatedString;
+}
+
+function howBig(array) {
+	var tempArray = new Array();
+	tempArray = array.split(";");
+	return tempArray.length;
+}
+
+function getOptedList(msgId) {
+	var returnArray = new Array();
+	var soql = "SELECT ities_msg__Opted_Out__c";
+	soql += ", ities_msg__Opted_Out2__c";
+	soql += ", ities_msg__Opted_Out3__c";
+	soql += ", ities_msg__Opted_Out4__c";
+	soql += ", ities_msg__Opted_Out5__c";
+	soql += ", ities_msg__Opted_Out6__c";
+	soql += ", ities_msg__Opted_Out7__c";
+	soql += ", ities_msg__Opted_Out8__c";
+	soql += ", ities_msg__Opted_Out9__c";
+	soql += ", ities_msg__Opted_Out10__c";
+	soql += " FROM ities_msg__Message__c WHERE Id='"+msgId+"'";
+	var sql = sforce.connection.query(soql);
+	if (sql.getBoolean("done") && sql.size != 0) {
+		var records = sql.getArray("records");
+		if (typeof(records[0].ities_msg__Opted_Out__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out2__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out2__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out3__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out3__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out4__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out4__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out5__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out5__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out6__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out6__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out7__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out7__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out8__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out8__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out9__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out9__c);
+		} else {
+			returnArray.push(null);
+		}
+		if (typeof(records[0].ities_msg__Opted_Out10__c) == "string") {
+			returnArray.push(records[0].ities_msg__Opted_Out10__c);
+		} else {
+			returnArray.push(null);
+		}
+	} else {
+		returnArray.push(null);
+	}
+	return returnArray;
+}
+
+function applyFilter() {
+	var selOption = document.getElementById("msglist_mode").value;
+	loadPage(selOption);
+}
+//-->
+</script>
+</head>
+<body class="homeTab homepage" onLoad="initiatePage()">
+<div id="results" style="">
+	<div class="bPageBlock secondaryPalette">
+		<div id="buttons"></div>
+		<div class="pbBody">
+			<div class="pbSubsection" id="content"><img src="/servlet/servlet.ImageServer?id=01570000000wRM7&oid=00D700000009wcP" alt="Loading..." border="0"></div>
+		</div>
+		<div class="pbFooter secondaryPalette"><div class="bg"></div></div>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<apex:page showHeader="false" sidebar="false" controller="Dropbox_for_SF.ConnectController" action="{!runOAuth}">
+	
+	<apex:pageMessages />
+
+	<apex:variable rendered="{!NOT(isConnected)}" value="" var="">
+		<apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__style, 'css/fi-core.css')}" />
+
+		<div class="fi-connect-intro">
+			 <img src="{!URLFOR($Resource.style, 'img/fi-connect.png')}" />
+
+		 	<apex:outputText value="{!$Label.dropbox_for_sf__Connect_Text}" escape="false"/>
+
+			<p class="pbtn"><a class="fi-btn fi-btn-blue" href="{!OAuthUrl}">{!$Label.dropbox_for_sf__Connect_Continue}</a></p>
+		</div>
+	</apex:variable>
+
+	<apex:variable rendered="{!isConnected}" value="" var="">
+		<script type="text/javascript">
+			document.domain = 'force.com';
+			window.opener.completeConnection();
+			window.close();
+		</script>
+	</apex:variable>
+
+
+</apex:page>

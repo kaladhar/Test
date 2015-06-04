@@ -1,0 +1,40 @@
+<link href="https://na1.salesforce.com/sCSS/23.0/{!$User.UIThemeDisplayed}/common.css" type="text/css" media="handheld,print,projection,screen,tty,tv" rel="stylesheet">
+<link href="https://na1.salesforce.com/sCSS/23.0/{!$User.UIThemeDisplayed}/allCustom.css" type="text/css" media="handheld,print,projection,screen,tty,tv" rel="stylesheet">
+<link href="https://na1.salesforce.com/sCSS/23.0/{!$User.UIThemeDisplayed}/dStandard.css" type="text/css" media="handheld,print,projection,screen,tty,tv" rel="stylesheet">
+<link href="https://na1.salesforce.com/sCSS/23.0/{!$User.UIThemeDisplayed}/default/elements.css" type="text/css" media="handheld,print,projection,screen,tty,tv" rel="stylesheet">
+{!IF( OR( $User.UIThemeDisplayed = 'Theme2', $User.UIThemeDisplayed = 'Theme1'), '', '<link href="https://na1.salesforce.com/sCSS/23.0/'&$User.UIThemeDisplayed&'/extended.css" type="text/css" media="handheld,print,projection,screen,tty,tv" rel="stylesheet">')}
+<style type="text/css">
+<!--
+{!IF( 
+	OR( $User.UIThemeDisplayed = 'Theme2', $User.UIThemeDisplayed = 'Theme1'), 
+	INCLUDE($SControl.theme2_common), 
+	INCLUDE($SControl.theme3_common)
+)}
+{!IF( 
+	OR( $User.UIThemeDisplayed = 'Theme2', $User.UIThemeDisplayed = 'Theme1'), 
+	INCLUDE($SControl.theme2_allCustom), 
+	INCLUDE($SControl.theme3_allCustom)
+)}
+{!IF( 
+	OR( $User.UIThemeDisplayed = 'Theme2', $User.UIThemeDisplayed = 'Theme1'), 
+	INCLUDE($SControl.theme2_dStandard), 
+	INCLUDE($SControl.theme3_dStandard)
+)}
+{!IF( 
+	OR( $User.UIThemeDisplayed = 'Theme2', $User.UIThemeDisplayed = 'Theme1'), 
+	INCLUDE($SControl.theme2_elements), 
+	INCLUDE($SControl.theme3_elements)
+)}
+{!IF( 
+	OR( $User.UIThemeDisplayed = 'Theme2', $User.UIThemeDisplayed = 'Theme1'), 
+	'', 
+	INCLUDE($SControl.theme3_extended)
+)}
+-->
+.txtLoading {
+	background-color: #E7FAE0;
+	color: #D9D9D9;
+	font-size: 14px;
+	padding: 2px 3px 2px 3px;
+}
+</style>

@@ -1,0 +1,120 @@
+<apex:component >
+	<apex:includeScript value="{!$Resource.pexmaps__DuelingListBoxesJS}"/>
+	<apex:attribute name="visibleItems" description="number of visible items." type="String" required="true"/>
+	<apex:attribute name="multiSelect" description="use multi-select list boxes." type="Boolean" default="true"/>
+	<apex:attribute name="disabled" description="is the component disabled." type="Boolean" default="false"/>
+	<apex:attribute name="reorder" description="show re-order up down buttons." type="Boolean" default="true"/>
+	<apex:attribute name="availableListBoxId" description="id of Available list box." type="String" required="true"/>
+	<apex:attribute name="availableListBoxLabel" description="label of Available list box." type="String" required="true"/>
+	<apex:attribute name="selectedListBoxId" description="id of Selected list box." type="String" required="true"/>
+	<apex:attribute name="selectedListBoxLabel" description="label of Selected list box." type="String" required="true"/>
+	<apex:attribute name="addButtonId" description="id of Add button." type="String" required="true"/>
+	<apex:attribute name="removeButtonId" description="id of Remove button." type="String" required="true"/>
+	<apex:attribute name="varName" description="the name of the instance of the dueling list box." type="String" required="true"/>
+	<apex:attribute name="addLabel" description="label of Add button." type="String" required="true"/>
+	<apex:attribute name="removeLabel" description="label of Remove button." type="String" required="true"/>
+	<apex:attribute name="topLabel" description="label of Top button." type="String" required="true"/>
+	<apex:attribute name="bottomLabel" description="label of Bottom button." type="String" required="true"/>
+	<apex:attribute name="upLabel" description="label of Up button." type="String" required="true"/>
+	<apex:attribute name="downLabel" description="label of Down button." type="String" required="true"/>
+
+	<div class="duelingListBox">
+		<table class="layout" cellspacing="0px" cellpadding="0px">
+			<tr>
+				<td class="selectCell">
+					<div class="selectTitle">
+						<label for="{!availableListBoxId}">
+							{!availableListBoxLabel}
+						</label>
+					</div>
+
+					<apex:outputPanel rendered="{!AND(multiSelect,NOT(disabled))}">
+						<select id="{!availableListBoxId}" size="{!visibleItems}" multiple="multiple" />
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!AND(NOT(multiSelect),NOT(disabled))}">
+						<select id="{!availableListBoxId}" size="{!visibleItems}" />
+					</apex:outputPanel>
+
+					<apex:outputPanel rendered="{!AND(multiSelect,disabled)}">
+						<select id="{!availableListBoxId}" size="{!visibleItems}" multiple="multiple" disabled="disabled"/>
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!AND(NOT(multiSelect),disabled)}">
+						<select id="{!availableListBoxId}" size="{!visibleItems}"  disabled="disabled"/>
+					</apex:outputPanel>
+
+
+				</td>
+				<td class="buttonCell" style="padding:0px 10px">
+					<div class="text">{!addLabel}</div>
+					<div class="text">
+						<a id="{!addButtonId}" href="javascript:{!varName}.addSelectedAvailableItems()">
+							<img src="/s.gif" alt="Add" class="rightArrowIcon" title="Add" /> 
+						</a>
+					</div>
+					<div class="text">
+						<a id="{!removeButtonId}" href="javascript:{!varName}.removeSelectedSelectedItems()">
+							<img src="/s.gif" alt="Remove"  class="leftArrowIcon" title="Remove"/> 
+						</a>
+					</div>
+					<div class="duelingText">{!removeLabel}</div>
+				</td>
+				<td class="selectCell">
+					<div class="selectTitle">
+						<label for="{!selectedListBoxId}">
+							{!selectedListBoxLabel}
+						</label>
+					</div>
+					
+					<apex:outputPanel rendered="{!AND(multiSelect,NOT(disabled))}">
+						<select id="{!selectedListBoxId}" size="{!visibleItems}" multiple="multiple" />
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!AND(NOT(multiSelect),NOT(disabled))}">
+						<select id="{!selectedListBoxId}" size="{!visibleItems}" />
+					</apex:outputPanel>
+
+					<apex:outputPanel rendered="{!AND(multiSelect,disabled)}">
+						<select id="{!selectedListBoxId}" size="{!visibleItems}" multiple="multiple" disabled="disabled"/>
+					</apex:outputPanel>
+					<apex:outputPanel rendered="{!AND(NOT(multiSelect),disabled)}">
+						<select id="{!selectedListBoxId}" size="{!visibleItems}" disabled="disabled"/>
+					</apex:outputPanel>
+					
+				</td>
+
+				<td class="buttonCell" style="padding:0px 10px">
+					<apex:outputPanel rendered="{!reorder}">				
+						<div class="text">{!topLabel}</div>
+						<div class="text">
+							<a href="javascript:{!varName}.moveSelectedToTop()">
+								<img src="/s.gif" alt="Top" class="doubleArrowUp" title="Top" /> 
+							</a>
+						</div>
+						<div class="text">{!upLabel}</div>
+						<div class="text">
+							<a href="javascript:{!varName}.moveSelectedUp()">
+								<img src="/s.gif" alt="Up"  class="upArrowIcon" title="Up"/> 
+							</a>
+						</div>
+						
+						<div class="text">
+							<a href="javascript:{!varName}.moveSelectedDown()">
+								<img src="/s.gif" alt="Down"  class="downArrowIcon" title="Down"/> 
+							</a>
+						</div>
+						<div class="text">{!downLabel}</div>
+						<div class="text">
+							<a href="javascript:{!varName}.moveSelectedToBottom()">
+								<img src="/s.gif" alt="Bottom"  class="doubleArrowDwn" title="Bottom"/> 
+							</a>
+						</div>
+						<div class="text">{!bottomLabel}</div>
+					</apex:outputPanel>
+				</td>
+
+
+				
+			</tr>
+		</table>
+	</div>
+	
+</apex:component>

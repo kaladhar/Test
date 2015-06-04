@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+	<title>Home Tab Messages</title>
+<!--
+	Created by: Greg Hacic
+	Last Update: 14 February 2012 by Greg Hacic
+	Questions?: InteractiveTies.com/contact
+	Copyright (c) 2003-2012 Interactive Ties
+-->
+{!INCLUDE($SControl.msg_styles)}
+<style type="text/css">
+p {margin-top: 0px;}
+a.messageView:visited, a.messageView:active, a.messageView:hover, a.messageView:link {font-weight: bold; text-decoration: none;}
+.removeMessage, a.removeMessage:visited, a.removeMessage:link, a.removeMessage:active {color: #BDBDBD; font-size: 90%; text-decoration: none;}
+a.removeMessage:hover {color: #BDBDBD; font-size: 90%; text-decoration: underline;}
+</style>
+<script src="/soap/ajax/23.0/connection.js" type="text/javascript"></script>
+<script src="/js/functions.js" type="text/javascript"></script>
+<script language="JavaScript" type="text/javascript">
+<!--
+{!INCLUDE($SControl.msg_functions)}
+
+var dateFormat;
+
+function initiatePage() {
+	//divDisplay("Hide");
+	getUserDateFormat();
+	setTimeout("getData('All')",1);
+}
+
+function getData(reqType) {
+	if ("{!User.Manage_Home_Page_Messages__c}" == "1") {
+		var msgArray = new Array();
+		msgArray = getMessages(reqType);
+		var pHTML = buildHTML(msgArray);
+	} else {
+		var pHTML = "You do not have permission to update the Messages for this organization.  Please use the 'Back' button on your browser or click the Home tab.";
+	}
+	document.getElementById("{!$User.Id}_Results").innerHTML = pHTML;
+	//divDisplay("Show");
+	resizeFrame();
+}
+
+function getMessages(reqType) {
+	var returnArray = new Array();
+	var sqlStatement = "SELECT ities_msg__Active__c, ities_msg__Expiration_Date__c, ities_msg__Contents__c, ities_msg__Date__c, Id, Name, ities_msg__Opted_Out__c, ities_msg__Visibility__c FROM ities_msg__Message__c";
+	if (reqType == "Active") {
+		sqlStatement += " WHERE ities_msg__Active__c = true ORDER BY ities_msg__Date__c DESC";
+	} else if (reqType == "Inactive") {
+		sqlStatement += " WHERE ities_msg__Active__c = false ORDER BY ities_msg__Date__c DESC";
+	} else {
+		sqlStatement += " ORDER BY ities_msg__Date__c DESC";
+	}
+	var sql = sforce.connection.query(sqlStatement);
+	if (sql.getBoolean("done") && sql.size > 0) {
+		var records = sql.getArray("records");
+		for (var a in records) {
+			returnArray[a] = new Array();
+			returnArray[a].push(records[a].Id,records[a].ities_msg__Date__c,records[a].Name,records[a].ities_msg__Contents__c,records[a].ities_msg__Active__c,records[a].ities_msg__Opted_Out__c,records[a].ities_msg__Visibility__c,records[a].ities_msg__Expiration_Date__c);
+		}
+	} else {
+		returnArray[0] = new Array();
+		returnArray[0].push("noResults","noResults");
+	}
+	return returnArray;
+}
+
+function buildHTML(array) {
+	var returnHTML = "<table class=\"list\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">";
+	returnHTML += "<tr class=\"headerRow\">";
+	returnHTML += "<th scope=\"col\" class=\"actionColumn\">Action</th>";
+	returnHTML += "<th scope=\"col\" class=\"\">Date</th>";
+	returnHTML += "<th scope=\"col\" class=\"\" width=\"100%\">Title</th>";
+	returnHTML += "<th scope=\"col\" class=\"\">Active</th>";
+	returnHTML += "</tr>";
+	if (array[0][0] == "noResults") {
+		returnHTML += "<tr class=\"dataRow even last\" onmouseout=\"if (typeof(hiOff) != 'undefined'){hiOff(this);}\" onfocus=\"if (typeof(hiOn) != 'undefined'){hiOn(this);}\" onblur=\"if (typeof(hiOff) != 'undefined'){hiOff(this);}\" onmouseover=\"if (typeof(hiOn) != 'undefined'){hiOn(this);}\">";
+		returnHTML += "<td class=\"dataCell\" colspan=\"4\">There are no Messages.<br>Click the &quot;New&quot; button to create the first one.</td>";
+		returnHTML += "</tr>";
+	} else {
+		for (var a=0; a<array.length; a++) {
+			returnHTML += "<tr class=\"dataRow ";
+			if (a%2 == 0) {
+				returnHTML += "even";
+			} else {
+				returnHTML += "odd";
+			}
+			if ((a+1) == array.length) {
+				returnHTML += " last\"";
+			} else if (a == 0) {
+				returnHTML += " first\"";
+			} else {
+				returnHTML += "\"";
+			}
+			returnHTML += " onblur=\"if (window.hiOff){hiOff(this);}\" onfocus=\"if (window.hiOn){hiOn(this);}\" onmouseout=\"if (window.hiOff){hiOff(this);}\" onmouseover=\"if (window.hiOn){hiOn(this);}\">";
+			returnHTML += "<td class=\"actionColumn\"><a href=\"JavaScript: parent.location.href = '{!LEFT(URLFOR( $Action.Message__c.msg_view,null),53)}&eid="+array[a][0]+"';\" class=\"actionLink\" title=\"View\">View</a>&nbsp;|&nbsp;<a href=\"JavaScript: parent.location.href = '{!LEFT(URLFOR( $Action.Message__c.msg_edit,null),53)}&eid="+array[a][0]+"';\" class=\"actionLink\" title=\"Edit\">Edit</a>&nbsp;|&nbsp;<a href=\"JavaScript: deleteRecord('"+array[a][0]+"');\" class=\"actionLink\" title=\"Delete\">Del</a></td>";
+			returnHTML += "<td class=\"dataCell\" align=\"right\" nowrap>"+displayDate(array[a][1])+"</td>";
+			returnHTML += "<td class=\"dataCell\"><div><a href=\"JavaScript: showRow('"+a+"');\">"+escapeHTML2(array[a][2])+"</a></div><div style=\"display: none; padding: 8px 0px 0px 0px;\" id=\"child"+a+"\">"+escapeHTML2(array[a][3])+"</div></td>";
+			returnHTML += "<td class=\"dataCell\">";
+			if (array[a][4] == "0" || array[a][4] == "false" || array[a][7] <= "{!TEXT(YEAR(TODAY()))&"-"&IF(LEN(TEXT(MONTH(TODAY())))<2,"0"&TEXT(MONTH(TODAY())),TEXT(MONTH(TODAY())))&"-"&IF(LEN(TEXT(DAY(TODAY())))<2,"0"&TEXT(DAY(TODAY())),TEXT(DAY(TODAY())))}") {
+				returnHTML += "<img src=\"/img/checkbox_unchecked.gif\" alt=\"Not Checked\" title=\"Not Checked\" width=\"21\" height=\"16\" class=\"checkImg\">";
+			} else {
+				returnHTML += "<img src=\"/img/checkbox_checked.gif\" alt=\"Checked\" title=\"Checked\" width=\"21\" height=\"16\" class=\"checkImg\">";
+			}
+			returnHTML += "</td>";
+			returnHTML += "</tr>";
+		}
+		returnHTML += "</table>";
+		returnHTML += "<div class=\"pShowMore\">"+array.length+" Messages</div>";
+	}
+	return returnHTML;
+}
+
+function showRow(id) {
+	var child = document.getElementById("child"+id);
+	if (child.style.display != "none") {
+		child.style.display = "none";
+	} else {
+		if (navigator.userAgent.indexOf("Firefox") != -1) {
+			child.style.display = "table-row";
+		} else {
+			child.style.display = "block";
+		}
+	}
+	resizeFrame();
+}
+
+function deleteRecord(id) {
+	if (confirm("Are you sure you want to permanently delete this Message for all users?")) {
+		var saveResult = sforce.connection.deleteIds([id]);
+		if (saveResult[0].getBoolean("success")) {
+			parent.location.reload();
+		} else {
+			alert(saveResult[0]);
+			return;
+		}
+	}
+}
+
+function applyFilter() {
+	var selOption = document.getElementById("msglist_mode").value;
+	getData(selOption);
+}
+//-->
+</script>
+</head>
+<body class="taskTab detailPage" onLoad="initiatePage()">
+<div id="results" style="">
+	<div class="bPageTitle">
+		<div class="ptBody secondaryPalette"><div class="content"><img src="/s.gif" alt="Home" class="pageTitleIcon"><h1 class="pageType">Message<span class="titleSeparatingColon">:</span></h1><h2 class="pageDescription" id="pageDesc"> Maintenance</h2><div class="blank">&nbsp;</div></div><div class="links"><a href="javascript:openPopupFocusEscapePounds('..{!LEFT($SControl.msg_help,48)}', 'Help', 700, 600, 'width=650,height=400,resizable=yes,toolbar=yes,status=no,scrollbars=yes,menubar=yes,directories=no,location=no,dependant=no', false, false);" title="Help for Messages (New Window)"><span class="helpLink">Help</span><img src="/s.gif" alt="Help" class="helpIcon" title="Help"></a></div></div>
+		<div class="ptBreadcrumb">&laquo;<a href="/home/home.jsp" target="_parent">Back: Home</a></div>
+	</div>
+	<div class="filterOverview"></div>
+	<div class="bPageBlock secondaryPalette">
+		<div class="pbHeader"><table border="0" cellpadding="0" cellspacing="0"><tr><td class="pbTitle"><img src="/s.gif" alt="" width="1" height="1" class="minWidth" title=""><h2 class="mainTitle">All Messages</h2></td><td class="pbButton" id="buttonsTop"><input value=" New " class="btn" type="button" title="New" onclick="JavaScript: parent.location.href = '{!LEFT(URLFOR( $Action.Message__c.msg_new,null),53)}';" name="new"></td><td class="pbHelp"><select id="msglist_mode" name="msglist_mode" onchange="applyFilter();"><option value="All" selected>All</option><option value="Active">Active</option><option value="Inactive">Inactive</option></select></td></tr></table></div>
+		<div class="pbBody">
+			<div class="pbSubsection" id="{!$User.Id}_Results"><img src="/servlet/servlet.ImageServer?id=01570000000wRM7&oid=00D700000009wcP" alt="Loading..." border="0"></div>
+		</div>
+		<div class="pbBottomButtons"><table border="0" cellpadding="0" cellspacing="0"><tr><td class="pbTitle"><img src="/s.gif" alt="" width="1" height="1" class="minWidth" title="">&nbsp;</td><td class="pbButtonb" id="buttonsBottom"><input value=" New " class="btn" type="button" title="New" onclick="JavaScript: parent.location.href = '{!LEFT(URLFOR( $Action.Message__c.msg_new,null),53)}';" name="new"></td></tr></table></div>
+		<div class="pbFooter secondaryPalette"><div class="bg"></div></div>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<apex:component controller="Dropbox_for_SF.DropboxController" access="global">
+    <apex:attribute name="IsWholeDropbox" assignTo="{!WholeDropbox}" type="Boolean" default="false" description="Show the whole of the user's Dropbox"/>
+    <apex:attribute name="IsPublisherAction" assignTo="{!PublisherAction}" type="Boolean" default="false" description="Is opened in a Chatter Publisher Action"/>
+
+    <html ng-app="DfSApp">
+
+        <head>
+            <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet" type="text/css"/>
+            <!--<apex:stylesheet value="{!URLFOR($Resource.mobileassets, 'mobileassets/css/normalize.css')}"/>-->
+            <apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__style, 'css/fi-sprite.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__style, 'css/fi-core.css')}" />
+            <apex:stylesheet value="{!URLFOR($Resource.Dropbox_for_SF__style, 'css/fi-sf1.css')}" />
+
+            <apex:includeScript value="/canvas/sdk/js/publisher.js" />
+            <apex:includeScript value="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" />
+            <apex:includeScript value="//ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular.min.js"/>
+            <apex:includeScript value="//ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular-sanitize.min.js"/>
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ng-context-menu.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ng-clip.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/he.js')}" />
+
+            <apex:variable value="" var="" rendered="{!splitScripts}">
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ui.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/remoting.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/filters.js')}" />
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/directives.js')}" /> 
+            </apex:variable>
+
+            <apex:variable value="" var="" rendered="{!NOT(splitScripts)}">
+                <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/fi.js')}" />
+            </apex:variable>
+
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/filesize.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/ZeroClipboard.min.js')}" />
+            <apex:includeScript value="{!URLFOR($Resource.Dropbox_for_SF__webassets, 'js/download.min.js')}" />
+
+
+            <script>
+                var RemoteActions = {};
+                RemoteActions.listDirectoryDetails = '{!$RemoteAction.DropboxController.listDirectoryDetails}';
+                RemoteActions.search = '{!$RemoteAction.DropboxController.search}';
+                RemoteActions.download = '{!$RemoteAction.DropboxController.download}';
+                RemoteActions.rename = '{!$RemoteAction.DropboxController.rename}';
+                RemoteActions.deletePath = '{!$RemoteAction.DropboxController.deletePath}';
+                RemoteActions.restore = '{!$RemoteAction.DropboxController.restore}';
+                RemoteActions.shares = '{!$RemoteAction.DropboxController.shares}';
+                RemoteActions.shareToChatter = '{!$RemoteAction.DropboxController.shareToChatter}';
+                RemoteActions.shareByEmail = '{!$RemoteAction.DropboxController.shareByEmail}';
+                RemoteActions.searchPeople = '{!$RemoteAction.DropboxController.searchPeople}';
+                RemoteActions.uploadChunk = '{!$RemoteAction.DropboxController.uploadChunk}';
+                RemoteActions.commitUpload = '{!$RemoteAction.DropboxController.commitUpload}';
+                RemoteActions.createFolder = '{!$RemoteAction.DropboxController.createFolder}';
+                RemoteActions.getPreviewAttachmentId = '{!$RemoteAction.DropboxController.getPreviewAttachmentId}';
+                RemoteActions.initApp = '{!$RemoteAction.DropboxController.initApp}';
+                RemoteActions.incrementChatterShareCount = '{!$RemoteAction.DropboxController.incrementChatterShareCount}';
+                
+                var VFBindings = {};
+                VFBindings.objectId = '{!JSENCODE(ContextObjectId)}';
+                VFBindings.chatterContextId = '{!JSENCODE(ChatterContextId)}';
+                VFBindings.isPublisherAction = {!PublisherAction};
+                VFBindings.zeroclipboard = '{!URLFOR($Resource.webassets, "swf/ZeroClipboard.swf")}';
+                VFBindings.isConnected = {!IsConnected};
+                VFBindings.isOwnerConnected = {!IsOwnerConnected};
+
+                var VFLabels = {};
+                VFLabels.One_Email_Recipient = '{!HTMLENCODE($Label.One_Email_Recipient)}';
+                VFLabels.Unable_to_upload = '{!HTMLENCODE($Label.Unable_to_upload)}';
+                VFLabels.Invalid_Email_Recipient = '{!HTMLENCODE($Label.Invalid_Email_Recipient)}';
+                VFLabels.Loading = '{!HTMLENCODE($Label.Loading)}';
+                VFLabels.Searching = '{!HTMLENCODE($Label.Searching)}';
+                VFLabels.Renaming = '{!HTMLENCODE($Label.Renaming)}';
+                VFLabels.Creating_Folder = '{!HTMLENCODE($Label.Creating_Folder)}';
+                VFLabels.Deleting = '{!HTMLENCODE($Label.Deleting)}';
+                VFLabels.Restoring = '{!HTMLENCODE($Label.Restoring)}';
+                VFLabels.Copied_to_Clipboard = '{!HTMLENCODE($Label.Copied_to_Clipboard)}';
+                VFLabels.Posting_to_Chatter = '{!HTMLENCODE($Label.Posting_to_Chatter)}';
+                VFLabels.Sending_Email = '{!HTMLENCODE($Label.Sending_Email)}';
+
+            </script>
+        </head>
+
+	    <body ng-controller="MainCtrl" class="fi-body" ng-class="{'fi-chatter-feed-body': !pageDetails.isSF1, 'fi-sf1-lv': pageDetails.isPublisherAction && pageDetails.isSF1}">
+
+            <div class="fi-message active" ng-if="messageBox.show">
+                <span ng-class="{'ok': messageBox.type == 'info', 'error': messageBox.type == 'error'}">{{messageBox.message}}</span>
+            </div>
+
+            <div ng-if="!popups.sharelink">
+                <div class="fi-sf1-header">
+                    <div class="fi-sf1-header-menu">
+                        <div class="fi-sf1-icon">
+                            <img src="{!URLFOR($Resource.style, 'img/sf1-dropbox-logo.png')}" />
+                        </div>
+                        <h2>Dropbox</h2>
+                        <div ng-if="isConnected && !pageDetails.noRoot" style="float:right">
+                            <button id="fi-add-more" class="fi-btn fi-btn-blue" fi-proxy-click="#fi-add-more-input" ng-disabled="popups.upload">{!$Label.Add_Image_Button}</button>
+                            <input type="file" accept="image/*" capture="camera" id="fi-add-more-input" class="fi-btn fi-add-more" fi-file-change="onMobileFileAdd"/>
+                        </div>
+                    </div>
+                    <div ng-if="navigation.pathParts.length > 1" class="fi-sf1-header-current-folder">
+                        <h2>{{navigation.pathParts[0].name}}</h2>
+                    </div>
+                </div>
+
+                <div class="fi-sf1-content" ng-class="{'fi-sf1-content-wn': navigation.pathParts.length > 1}">
+                    <div ng-if="navigation.pathParts.length > 1">
+                        <ul class="fi-list">
+                            <li class="fi-item">
+                                <a href="#" ng-click="handlePathClick(navigation.pathParts[1].path)" class="fi-sf1-header-up">
+                                    <img class="fi-icon" src="{!URLFOR($Resource.style, 'img/folder-up.png')}" /> {!$Label.Navigate_to_Parent}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div ng-if="isConnected && !isOwnerConnected" id="browse-empty" class="fi-sf1-browse-empty" >
+                        <div class="fi-browse-empty-content">
+                            <h3>{!$Label.Disconnected_Owner}</h3>
+                        </div>
+                    </div>
+
+                    <div ng-if="!isConnected" id="browse-empty" class="fi-sf1-browse-empty">
+                        <div class="fi-browse-empty-content">
+                            <h3 ng-if="pageDetails.isSF1">{!$Label.Disconnected_Mobile_User}</h3>
+                            <h3 ng-if="!pageDetails.isSF1">{!$Label.Disconnected_User}</h3>
+                        </div>
+                    </div>
+
+                    <div ng-if="isConnected && pageDetails.noRoot" id="browse-empty" class="fi-sf1-browse-empty">
+                        <div class="fi-browse-empty-content">
+                            <h3>{!$Label.No_Shared_Root}</h3>
+                            <p>{!$Label.No_Shared_Root_Text}</p>
+                        </div>
+                    </div>
+
+                    <div ng-if="DirectoryDetails.items.length == 0 && isConnected && !pageDetails.noRoot" id="browse-empty" class="fi-sf1-browse-empty">
+                        <div class="fi-browse-empty-content">
+                            <h3 ng-if="navigation.pathParts.length > 1">{!$Label.Empty_Folder_Header}</h3>
+                            <h3 ng-if="navigation.pathParts.length == 1">{!$Label.Empty_Folder_Header_Root}&nbsp;{!HTMLEncode(ObjectLabel)}</h3>
+                        </div>
+                    </div>
+
+        			<ul ng-if="isConnected && !pageDetails.noRoot && DirectoryDetails.items.length > 0" class="fi-list">
+        				<li ng-repeat="item in DirectoryDetails.items | orderBy:predicate:reverse" class="fi-item" ng-class="{'fi-folder': item.isDir , 'fi-single': !item.isDir }" ng-click="onMobileItemClick(item)">
+                            	
+                            <div ng-if="item.isDir" class="fi-file">
+                                <a href="#" ng-click="handleItemClick(item)" class="fi-file-a">
+    							     <img class="fi-icon sprite_web s_web_{{item.icon}}_32" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" />
+    							     <div class="fi-filename">
+    								        <span ng-bind-html="item.name"></span>
+    							     </div>
+                                </a>
+                                <a href="#" ng-click="onShareLinkClick(item)" class="fi-sf1-share">
+                                    <img class="sprite sprite_web s_web_s_link " src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" />
+                                </a>
+    						</div>
+
+    						<div ng-if="!item.isDir" class="fi-file">
+                                <a href="#" ng-click="handleItemClick(item)" class="fi-file-a">
+        							<img class="fi-icon sprite_web s_web_{{item.icon}}_32" src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" />
+        							<div class="fi-filename">
+        								<div ng-bind-html="item.name"></div>
+        								<div class="fi-meta">
+        									<div class="fi-meta-size">{{item.bytes | fiBytes}},&nbsp;</div>
+        									<div class="fi-meta-modified">{{item.modifiedFormatted}}</div>
+        								</div>
+        							</div>
+                                </a>
+                                <a href="#" ng-click="onShareLinkClick(item)" class="fi-sf1-share">
+                                    <img class="sprite sprite_web s_web_s_link " src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" />
+                                </a>
+    						</div>        				
+        					<br class="clear" />
+        				</li>
+        			</ul>
+                </div>
+            </div>
+
+            <fi-popup ng-if="popups.upload" fi-display="{{popups.upload}}">
+                <div class="fi-modal-box">
+                    <ul class="fi-upload-modal">
+                        <li ng-repeat="file in upload.files" ng-class="{'first':$first, 'last': $last, 'complete': file.completed == file.file.size}">
+                            <div class="fi-upload-modal-progress-bar" style="width: {{(file.completed / file.file.size) * 100}}%;"></div>      
+                            <div class="fi-upload-modal-file-info">       
+                                <div class="fi-upload-modal-file-info-name">         
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web s_web_page_white" />
+                                    <span class="filename">{{file.file.name}} </span>
+                                    <span class="size">- {{file.file.size | fiBytes}}</span>       
+                                </div>        
+                                <div class="fi-upload-modal-status">
+                                    <img src="{!URLFOR($Resource.style, 'img/ispacer.gif')}" class="sprite sprite_web" ng-class="{'s_web_s_check': file.completed == file.file.size && !file.cancel, 's_web_cancelsync': file.cancel, 'fi-hidden': file.completed != file.file.size}" />
+                                    <a ng-if="!file.cancel" href="#" ng-click="onUploadCancel(file)" ng-class="{'fi-hidden': file.completed == file.file.size}">&times;</a>
+                                </div>        
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </fi-popup>
+
+
+
+            <div ng-if="popups.sharelink">
+                <div ng-if="pageDetails.isSF1" class="fi-sf1-share-header">
+                    <input class="fi-btn fi-btn-cancel" ng-click="onShareLinkCancel()" type="button" value="Cancel" />
+                    <input class="fi-btn fi-btn-blue fi-btn-share" ng-click="onShareToChatter()" type="button" value="Share" />
+                    <h2>{!$Label.Share_Link}</h2>
+                </div>
+                <div class="fi-sf1-share-content" ng-class="{'fi-pa-share': pageDetails.isPublisherAction && !pageDetails.isSF1}">
+                    <div class="fi-sf1-share-input">
+                        <label for="url">{!$Label.Share_Link_URL}</label>
+                        <input id="url" type="url" value="{{sharelink.link}}" disabled="disabled"/>
+                    </div>
+                    <div class="fi-sf1-share-input">
+                        <label for="linkname">{!$Label.Share_Link_Name}</label>
+                        <input id="linkname" type="url" ng-bind-html="sharelink.linkname"/>
+                    </div>
+                    <div class="fi-sf1-share-input">    
+                        <textarea placeholder="{!$Label.Chatter_Placeholder}" tabindex="23" rows="4" name="custom_message" class="fi-share-message" ng-model="chatter.newMessage" ng-change="onChatterMessageKeyUp($event)" ng-keydown="chatterSuggestionsKeyDown($event)"></textarea>
+                        <div ng-if="chatter.mentionSuggestions.length > 0">
+                            <ul class="fi-share-search">
+                                <li ng-repeat="person in chatter.mentionSuggestions" ng-click="onMentionSuggestionClick(person.recordId, person.name)" ng-mouseover="setSelectedChatterSuggestion($index)" ng-mouseleave="setSelectedChatterSuggestion(-1)" ng-class="{'fi-search-highlight': $index == chatter.mentionSuggestionsSelected}">
+                                    <img ng-src="{{person.photoUrl}}" />
+                                    <div>
+                                        <span><b>{{person.name}}</b></span>
+                                        <span>{{person.description}}</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="pageDetails.isPublisherAction && !pageDetails.isSF1" class="fi-sf1-share-footer">
+                    <input class="fi-btn fi-btn-cancel" ng-click="onShareLinkCancel()" type="button" value="Cancel" />
+                    <input class="fi-btn fi-btn-sf-zen fi-btn-share" ng-click="onShareToChatter()" type="button" value="Share" />
+                </div>
+            </div>
+	    </body>
+
+    </html>
+
+</apex:component>

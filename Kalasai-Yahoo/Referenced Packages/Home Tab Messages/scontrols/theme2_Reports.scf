@@ -1,0 +1,106 @@
+/* -------------- */
+/* version: 18.0*/
+/* skin: Salesforce */
+/* cssSheet: Reports */
+/* postfix:  */
+/* spritesEnabled: false */
+
+
+/**
+ * Included in every page of the report wizard, including the run-results page.
+ */
+ 
+.floatingHeader {
+    position: fixed;
+    top: 5px;
+    background-color: #aaaaff;
+    opacity: 0.95;
+    border: 1px solid #808080;
+    /* Padding is used for an "overhang" effect */
+    padding: 0px 3px;
+    display: none;
+}
+
+/* Messaging box styles */
+.saveSummaryBox {
+    padding: 4px;
+    border: 1px solid #DDD;
+    background-color: #EEE;
+    display: block;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.saveSummaryBox td .labelCol {
+	text-align: right;
+	padding-bottom: 8px;
+	white-space: nowrap;
+	display: block;
+	width: 100%;
+}
+
+.saveSummaryBox .saveSummaryBoxDesc {
+	padding-bottom: 30px;
+}
+
+.saveSummaryBoxLabel {
+    margin-top: 20px;
+}
+
+.reportOutput table {
+    margin-right: 40px;
+}
+
+/* undo the margin style for the floating header */
+.floatingHeader table {
+    margin-right: 0px;
+}    
+
+.reportWizardButtons {
+	margin-bottom: 30px;
+}
+
+
+@media print {
+    .floatingHeader {
+        visibility: hidden;
+    }
+}
+
+.numOne {
+    background-image:url("/img/analytics/chart_thumb/numDots_sprite.gif");
+    height: 18px;
+    width: 18px;
+    background-position: 0px 0px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+
+.numTwo {
+    background-image:url("/img/analytics/chart_thumb/numDots_sprite.gif");
+    height: 18px;
+    width: 18px;
+    background-position: 0px -18px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+
+.numThree {
+    background-image:url("/img/analytics/chart_thumb/numDots_sprite.gif");
+    height: 18px;
+    width: 18px;
+    background-position: 0px -36px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+/* -------------- */
+/* version: 18.0*/
+/* skin: Salesforce */
+/* cssSheet: Reports */
+/* postfix: ie8 */
+/* spritesEnabled: false */
+
+
+.floatingHeader {
+    -ms-filter: "alpha(opacity=95)";
+}

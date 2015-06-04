@@ -1,0 +1,148 @@
+<apex:component >
+	<apex:attribute name="currentLetter" description="Initial letter." type="String"/>
+	<apex:attribute name="method" description="Javascript method to call." type="String" />
+	<apex:attribute name="other" description="Localized string for 'other'." type="String" />
+	<apex:attribute name="all" description="Localized string for 'all'." type="String" />
+
+	<apex:outputPanel layout="block" styleClass="rolodex">
+		<apex:outputLink value="javascript:{!method}('a');" styleClass="listItem" rendered="{!IF(currentLetter='a',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">A</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='a',true,false)}" >A</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('b');" styleClass="listItem" rendered="{!IF(currentLetter='b',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">B</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='b',true,false)}" >B</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('c');" styleClass="listItem" rendered="{!IF(currentLetter='c',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">C</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='c',true,false)}" >C</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('d');" styleClass="listItem" rendered="{!IF(currentLetter='d',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">D</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='d',true,false)}" >D</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('e');" styleClass="listItem" rendered="{!IF(currentLetter='e',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">E</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='e',true,false)}" >E</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('f');" styleClass="listItem" rendered="{!IF(currentLetter='f',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">F</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='f',true,false)}" >F</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('g');" styleClass="listItem" rendered="{!IF(currentLetter='g',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">G</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='g',true,false)}" >G</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('h');" styleClass="listItem" rendered="{!IF(currentLetter='h',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">H</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='h',true,false)}" >H</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('i');" styleClass="listItem" rendered="{!IF(currentLetter='i',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">I</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='i',true,false)}" >I</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('j');" styleClass="listItem" rendered="{!IF(currentLetter='j',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">J</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='j',true,false)}" >J</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('k');" styleClass="listItem" rendered="{!IF(currentLetter='k',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">K</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='k',true,false)}" >K</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('l');" styleClass="listItem" rendered="{!IF(currentLetter='l',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">L</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='l',true,false)}" >L</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('m');" styleClass="listItem" rendered="{!IF(currentLetter='m',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">M</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='m',true,false)}" >M</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('n');" styleClass="listItem" rendered="{!IF(currentLetter='n',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">N</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='n',true,false)}" >N</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('o');" styleClass="listItem" rendered="{!IF(currentLetter='o',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">O</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='o',true,false)}" >O</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('p');" styleClass="listItem" rendered="{!IF(currentLetter='p',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">P</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='p',true,false)}" >P</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('q');" styleClass="listItem" rendered="{!IF(currentLetter='q',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">Q</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='q',true,false)}" >Q</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('r');" styleClass="listItem" rendered="{!IF(currentLetter='r',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">R</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='r',true,false)}" >R</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('s');" styleClass="listItem" rendered="{!IF(currentLetter='s',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">S</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='s',true,false)}" >S</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('t');" styleClass="listItem" rendered="{!IF(currentLetter='t',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">T</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='t',true,false)}" >T</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('u');" styleClass="listItem" rendered="{!IF(currentLetter='u',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">U</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='u',true,false)}" >U</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('v');" styleClass="listItem" rendered="{!IF(currentLetter='v',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">V</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='v',true,false)}" >V</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('w');" styleClass="listItem" rendered="{!IF(currentLetter='w',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">W</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='w',true,false)}" >W</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('x');" styleClass="listItem" rendered="{!IF(currentLetter='x',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">X</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='x',true,false)}" >X</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('y');" styleClass="listItem" rendered="{!IF(currentLetter='y',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">Y</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='y',true,false)}" >Y</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('z');" styleClass="listItem" rendered="{!IF(currentLetter='z',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">Z</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='z',true,false)}" >Z</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('Other');" styleClass="listItem" rendered="{!IF(currentLetter='Other',false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">{!other}</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(currentLetter='Other',true,false)}" >{!other}</apex:outputPanel>			
+
+		<apex:outputLink value="javascript:{!method}('All');" styleClass="listItem" rendered="{!IF(OR(currentLetter='All',currentLetter=''),false,true)}">
+			<apex:OutputPanel styleClass="listItemPad">{!all}</apex:OutputPanel>
+		</apex:outputLink>
+		<apex:outputPanel styleClass="listItemSelected" rendered="{!IF(OR(currentLetter='All',currentLetter=''),true,false)}" >{!all}</apex:outputPanel>			
+	</apex:outputPanel>
+</apex:component>
